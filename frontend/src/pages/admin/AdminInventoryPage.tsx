@@ -30,18 +30,29 @@ export default function AdminInventoryPage() {
     },
   });
 
+  const parsedAdjustment = Number(adjustmentValue);
+  const isAdjustmentValid =
+    adjustmentValue.trim() !== '' && Number.isInteger(parsedAdjustment) && parsedAdjustment !== 0;
+
   const adjustMutation = useMutation({
-    mutationFn: () =>
-      inventoryService.adjustStock(selected!.productId, {
-        adjustment: Number(adjustmentValue),
-        reason: reason || undefined,
-      }),
+    mutationFn: () => {
+      if (!isAdjustmentValid) {
+        throw new Error('Adjustment must be a non-zero whole number.');
+      }
+      return inventoryService.adjustStock(selected!.productId, {
+        adjustment: parsedAdjustment,
+        reason: reason.trim() || undefined,
+      });
+    },
     onSuccess: () => {
       setSelected(null);
       setAdjustmentValue('0');
       setReason('');
       queryClient.invalidateQueries({ queryKey: ['admin', 'inventory'] });
       queryClient.invalidateQueries({ queryKey: ['admin', 'analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['product'] });
       toast({ title: 'Inventory updated', variant: 'success' });
     },
     onError: (err) => {
@@ -112,6 +123,7 @@ export default function AdminInventoryPage() {
                             onClick={() => {
                               setSelected(item);
                               setAdjustmentValue('10');
+                              setReason('');
                             }}
                           >
                             <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -161,6 +173,7 @@ export default function AdminInventoryPage() {
               Cancel
             </Button>
             <Button
+              disabled={!isAdjustmentValid}
               isLoading={adjustMutation.isPending}
               onClick={() => adjustMutation.mutate()}
             >

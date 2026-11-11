@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, XCircle, Clock, CreditCard, RefreshCw } from 'lucide-react';
 import * as orderService from '../../services/order.service';
 import * as paymentService from '../../services/payment.service';
+import { useAuth } from '../../stores/auth.store';
 import { useToast } from '../../stores/toast.store';
 import { extractErrorMessage, formatCurrency, generateIdempotencyKey } from '../../utils/format';
 import { OrderStatusBadge } from '../../components/order/OrderStatusBadge';
@@ -17,25 +18,29 @@ export default function PaymentResultPage() {
   const orderId = searchParams.get('orderId') ?? '';
   const paymentIdParam = searchParams.get('paymentId') ?? '';
   const queryClient = useQueryClient();
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
-  const [activePaymentId, setActivePaymentId] = useState(paymentIdParam);
+  const [paymentOverride, setPaymentOverride] = useState<{
+    orderId: string;
+    paymentId: string;
+  } | null>(null);
 
   const orderQuery = useQuery({
-    queryKey: ['order', orderId],
+    queryKey: ['order', user?.id ?? 'anon', orderId],
     queryFn: async () => {
       const res = await orderService.getOrder(orderId);
       return res.data;
     },
-    enabled: !!orderId,
+    enabled: !!orderId && !!user?.id,
   });
 
   const paymentsQuery = useQuery({
-    queryKey: ['payments', 'order', orderId],
+    queryKey: ['payments', 'order', user?.id ?? 'anon', orderId],
     queryFn: async () => {
       const res = await paymentService.getPaymentsForOrder(orderId);
       return res.data;
     },
-    enabled: !!orderId,
+    enabled: !!orderId && !!user?.id,
   });
 
   const initiateMutation = useMutation({
@@ -47,9 +52,9 @@ export default function PaymentResultPage() {
       return res.data;
     },
     onSuccess: (payment) => {
-      setActivePaymentId(payment.id);
-      queryClient.invalidateQueries({ queryKey: ['payments', 'order', orderId] });
-      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      setPaymentOverride({ orderId, paymentId: payment.id });
+      queryClient.invalidateQueries({ queryKey: ['payments', 'order', user?.id ?? 'anon', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['order', user?.id ?? 'anon', orderId] });
     },
     onError: (err) => {
       toast({
@@ -60,7 +65,9 @@ export default function PaymentResultPage() {
     },
   });
 
-  const resolvedPaymentId = activePaymentId || paymentsQuery.data?.[0]?.id || '';
+  const activePaymentId = paymentOverride?.orderId === orderId ? paymentOverride.paymentId : '';
+  const resolvedPaymentId = activePaymentId || paymentIdParam || paymentsQuery.data?.[0]?.id || '';
+  const waitingForPaymentsLookup = !resolvedPaymentId && paymentsQuery.isLoading;
 
   const simulateMutation = useMutation({
     mutationFn: async (outcome: 'SUCCEEDED' | 'FAILED' | 'TIMEOUT') => {
@@ -68,7 +75,7 @@ export default function PaymentResultPage() {
       if (!pid) {
         const initRes = await paymentService.initiatePayment(orderId, orderId);
         pid = initRes.data.id;
-        setActivePaymentId(pid);
+        setPaymentOverride({ orderId, paymentId: pid });
       }
       const res = await paymentService.simulatePayment({
         paymentId: pid,
@@ -84,9 +91,14 @@ export default function PaymentResultPage() {
       return res.data;
     },
     onSuccess: (payment) => {
-      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
-      queryClient.invalidateQueries({ queryKey: ['payments', 'order', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['order', user?.id ?? 'anon', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['payments', 'order', user?.id ?? 'anon', orderId] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['product'] });
+      queryClient.invalidateQueries({ queryKey: ['flash-sales'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'analytics'] });
       toast({
         title: `Payment ${payment.status.toLowerCase()}`,
         variant: payment.status === 'SUCCEEDED' ? 'success' : 'warning',
@@ -238,6 +250,7 @@ export default function PaymentResultPage() {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <Button
                   data-testid="simulate-success-button"
+                  disabled={waitingForPaymentsLookup || initiateMutation.isPending}
                   isLoading={simulateMutation.isPending}
                   onClick={() => simulateMutation.mutate('SUCCEEDED')}
                   className="bg-emerald-600 hover:bg-emerald-700"
@@ -247,6 +260,7 @@ export default function PaymentResultPage() {
                 </Button>
                 <Button
                   variant="danger"
+                  disabled={waitingForPaymentsLookup || initiateMutation.isPending}
                   isLoading={simulateMutation.isPending}
                   onClick={() => simulateMutation.mutate('FAILED')}
                 >
@@ -255,6 +269,7 @@ export default function PaymentResultPage() {
                 </Button>
                 <Button
                   variant="outline"
+                  disabled={waitingForPaymentsLookup || initiateMutation.isPending}
                   isLoading={simulateMutation.isPending}
                   onClick={() => simulateMutation.mutate('TIMEOUT')}
                 >
@@ -281,7 +296,7 @@ export default function PaymentResultPage() {
             <Link to={`/orders/${order.id}`}>
               <Button variant="outline">View Order Details</Button>
             </Link>
-            <Link to="/orders">
+            <Link to={isAdmin && order.userId && user?.id !== order.userId ? '/admin/orders' : '/orders'}>
               <Button variant="ghost">All Orders</Button>
             </Link>
           </div>

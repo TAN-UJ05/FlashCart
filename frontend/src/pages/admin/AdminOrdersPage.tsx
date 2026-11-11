@@ -23,6 +23,18 @@ const ALL_STATUSES: OrderStatus[] = [
   'REFUNDED',
 ];
 
+const ALLOWED_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  PENDING: ['CANCELLED'],
+  PAYMENT_PENDING: ['CANCELLED'],
+  PAYMENT_FAILED: ['CANCELLED'],
+  CONFIRMED: ['PROCESSING', 'SHIPPED', 'CANCELLED', 'REFUNDED'],
+  PROCESSING: ['SHIPPED', 'CANCELLED', 'REFUNDED'],
+  SHIPPED: ['DELIVERED'],
+  DELIVERED: ['REFUNDED'],
+  CANCELLED: [],
+  REFUNDED: [],
+};
+
 export default function AdminOrdersPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -46,6 +58,11 @@ export default function AdminOrdersPage() {
       orderService.adminUpdateOrderStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['order'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['product'] });
       toast({ title: 'Order status updated', variant: 'success' });
     },
     onError: (err) => {
@@ -131,23 +148,34 @@ export default function AdminOrdersPage() {
                         <OrderStatusBadge status={order.status} />
                       </td>
                       <td className="px-4 py-3">
-                        <select
-                          value={order.status}
-                          disabled={updateStatusMutation.isPending}
-                          onChange={(e) =>
-                            updateStatusMutation.mutate({
-                              id: order.id,
-                              status: e.target.value as OrderStatus,
-                            })
-                          }
-                          className="rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs"
-                        >
-                          {ALL_STATUSES.map((st) => (
-                            <option key={st} value={st}>
-                              {st}
-                            </option>
-                          ))}
-                        </select>
+                        {(() => {
+                          const allowedNext = ALLOWED_TRANSITIONS[order.status] ?? [];
+                          return (
+                            <select
+                              value={order.status}
+                              disabled={updateStatusMutation.isPending || allowedNext.length === 0}
+                              onChange={(e) => {
+                                const nextStatus = e.target.value as OrderStatus;
+                                if (nextStatus === order.status) return;
+                                updateStatusMutation.mutate({
+                                  id: order.id,
+                                  status: nextStatus,
+                                });
+                              }}
+                              className="rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs disabled:bg-gray-100 disabled:text-gray-500"
+                            >
+                              {ALL_STATUSES.map((st) => (
+                                <option
+                                  key={st}
+                                  value={st}
+                                  disabled={st !== order.status && !allowedNext.includes(st)}
+                                >
+                                  {st}
+                                </option>
+                              ))}
+                            </select>
+                          );
+                        })()}
                       </td>
                     </tr>
                   ))

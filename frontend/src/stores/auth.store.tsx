@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { User } from '../types';
 import { setAccessToken } from '../services/api';
 import * as authService from '../services/auth.service';
@@ -16,6 +17,28 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
+const SESSION_HINT_KEY = 'flashcart_has_session';
+
+function getSessionHint(): boolean {
+  try {
+    return typeof window !== 'undefined' && window.localStorage.getItem(SESSION_HINT_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function setSessionHint(hasSession: boolean): void {
+  try {
+    if (typeof window === 'undefined') return;
+    if (hasSession) {
+      window.localStorage.setItem(SESSION_HINT_KEY, '1');
+    } else {
+      window.localStorage.removeItem(SESSION_HINT_KEY);
+    }
+  } catch {
+    // Ignore storage restrictions
+  }
+}
 
 let inFlightRefresh: Promise<User | null> | null = null;
 
@@ -26,9 +49,11 @@ async function performSessionRefresh(): Promise<User | null> {
         const { data } = await authService.refreshToken();
         setAccessToken(data.accessToken);
         const userRes = await authService.getCurrentUser();
+        setSessionHint(true);
         return userRes.data;
       } catch {
         setAccessToken(null);
+        setSessionHint(false);
         return null;
       } finally {
         inFlightRefresh = null;
@@ -39,15 +64,22 @@ async function performSessionRefresh(): Promise<User | null> {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(() => getSessionHint());
 
   const refreshAuth = useCallback(async () => {
     const restoredUser = await performSessionRefresh();
+    if (!restoredUser) {
+      queryClient.clear();
+    }
     setUser(restoredUser);
-  }, []);
+  }, [queryClient]);
 
   useEffect(() => {
+    if (!getSessionHint()) {
+      return;
+    }
     let active = true;
     performSessionRefresh().then((restoredUser) => {
       if (active) {
@@ -60,17 +92,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const login = useCallback(async (email: string, password: string): Promise<User> => {
-    const { data } = await authService.login({ email, password });
-    setAccessToken(data.accessToken);
-    if (data.user) {
-      setUser(data.user);
-      return data.user;
-    }
-    const userRes = await authService.getCurrentUser();
-    setUser(userRes.data);
-    return userRes.data;
-  }, []);
+  const login = useCallback(
+    async (email: string, password: string): Promise<User> => {
+      const { data } = await authService.login({ email, password });
+      setAccessToken(data.accessToken);
+      const nextUser = data.user ?? (await authService.getCurrentUser()).data;
+      setSessionHint(true);
+      queryClient.clear();
+      setUser(nextUser);
+      return nextUser;
+    },
+    [queryClient]
+  );
 
   const register = useCallback(
     async (payload: authService.RegisterPayload): Promise<User> => {
@@ -78,25 +111,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data?.accessToken) {
         setAccessToken(data.accessToken);
       }
-      if (data?.user) {
-        setUser(data.user);
-        return data.user;
-      }
-      const userRes = await authService.getCurrentUser();
-      setUser(userRes.data);
-      return userRes.data;
+      const nextUser = data?.user ?? (await authService.getCurrentUser()).data;
+      setSessionHint(true);
+      queryClient.clear();
+      setUser(nextUser);
+      return nextUser;
     },
-    []
+    [queryClient]
   );
 
   const logout = useCallback(async () => {
     try {
       await authService.logout();
     } finally {
-      setUser(null);
+      setSessionHint(false);
       setAccessToken(null);
+      setUser(null);
+      queryClient.clear();
     }
-  }, []);
+  }, [queryClient]);
 
   return (
     <AuthContext.Provider

@@ -6,7 +6,10 @@ import com.flashcart.auth.repository.PasswordResetTokenRepository;
 import com.flashcart.common.response.ApiResponse;
 import com.flashcart.common.response.PageResponse;
 import com.flashcart.flashsale.dto.FlashSaleDto;
+import com.flashcart.flashsale.dto.FlashSaleItemRequest;
+import com.flashcart.flashsale.dto.FlashSaleRequest;
 import com.flashcart.product.dto.ProductDto;
+import com.flashcart.product.dto.ProductRequest;
 import com.flashcart.user.dto.UserDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +17,9 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
@@ -173,6 +179,186 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
         assertThat(liveFlashSales.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(liveFlashSales.getBody()).isNotNull();
         assertThat(liveFlashSales.getBody().getData()).isNotEmpty();
+    }
+
+    @Test
+    void adminCustomers_listWithoutSearchWithSearchAndAuthGuard() {
+        ResponseEntity<ApiResponse<AuthResponse>> adminLogin = restTemplate.exchange(
+                "/api/v1/auth/login",
+                HttpMethod.POST,
+                new HttpEntity<>(new LoginRequest("admin@flashcart.com", "Admin@123456")),
+                new ParameterizedTypeReference<>() {}
+        );
+        String adminToken = adminLogin.getBody().getData().getAccessToken();
+        HttpHeaders adminHeaders = new HttpHeaders();
+        adminHeaders.setBearerAuth(adminToken);
+
+        // Listing customers without search parameter must succeed (regression test for null search bytea error)
+        ResponseEntity<ApiResponse<PageResponse<UserDto>>> allCustomersResp = restTemplate.exchange(
+                "/api/v1/admin/customers?page=0&size=20",
+                HttpMethod.GET,
+                new HttpEntity<>(adminHeaders),
+                new ParameterizedTypeReference<>() {}
+        );
+        assertThat(allCustomersResp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(allCustomersResp.getBody()).isNotNull();
+        assertThat(allCustomersResp.getBody().isSuccess()).isTrue();
+        assertThat(allCustomersResp.getBody().getData().getTotalElements()).isGreaterThanOrEqualTo(2);
+        assertThat(allCustomersResp.getBody().getData().getContent())
+                .allMatch(u -> u.getRole().name().equals("CUSTOMER"));
+
+        // Blank search (whitespace or empty) behaves like unfiltered list
+        ResponseEntity<ApiResponse<PageResponse<UserDto>>> blankSearchResp = restTemplate.exchange(
+                "/api/v1/admin/customers?page=0&size=20&search={search}",
+                HttpMethod.GET,
+                new HttpEntity<>(adminHeaders),
+                new ParameterizedTypeReference<>() {},
+                "   "
+        );
+        assertThat(blankSearchResp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(blankSearchResp.getBody().getData().getTotalElements())
+                .isEqualTo(allCustomersResp.getBody().getData().getTotalElements());
+
+        ResponseEntity<ApiResponse<PageResponse<UserDto>>> emptySearchResp = restTemplate.exchange(
+                "/api/v1/admin/customers?page=0&size=20&search=",
+                HttpMethod.GET,
+                new HttpEntity<>(adminHeaders),
+                new ParameterizedTypeReference<>() {}
+        );
+        assertThat(emptySearchResp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(emptySearchResp.getBody().getData().getTotalElements())
+                .isEqualTo(allCustomersResp.getBody().getData().getTotalElements());
+
+        // Filtered search by name / email returns matching customer
+        ResponseEntity<ApiResponse<PageResponse<UserDto>>> filteredResp = restTemplate.exchange(
+                "/api/v1/admin/customers?page=0&size=20&search=aarav",
+                HttpMethod.GET,
+                new HttpEntity<>(adminHeaders),
+                new ParameterizedTypeReference<>() {}
+        );
+        assertThat(filteredResp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(filteredResp.getBody().getData().getContent())
+                .anyMatch(u -> u.getEmail().equals("customer1@flashcart.com"));
+
+        // Customer role cannot access admin customers endpoint
+        ResponseEntity<ApiResponse<AuthResponse>> custLogin = restTemplate.exchange(
+                "/api/v1/auth/login",
+                HttpMethod.POST,
+                new HttpEntity<>(new LoginRequest("customer1@flashcart.com", "Customer@123")),
+                new ParameterizedTypeReference<>() {}
+        );
+        HttpHeaders custHeaders = new HttpHeaders();
+        custHeaders.setBearerAuth(custLogin.getBody().getData().getAccessToken());
+        ResponseEntity<ApiResponse<Object>> forbiddenResp = restTemplate.exchange(
+                "/api/v1/admin/customers?page=0&size=20",
+                HttpMethod.GET,
+                new HttpEntity<>(custHeaders),
+                new ParameterizedTypeReference<>() {}
+        );
+        assertThat(forbiddenResp.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void overlappingLiveFlashSalesAndProductImageUpdate_workWithoutServerError() {
+        ResponseEntity<ApiResponse<AuthResponse>> adminLogin = restTemplate.exchange(
+                "/api/v1/auth/login",
+                HttpMethod.POST,
+                new HttpEntity<>(new LoginRequest("admin@flashcart.com", "Admin@123456")),
+                new ParameterizedTypeReference<>() {}
+        );
+        HttpHeaders adminHeaders = new HttpHeaders();
+        adminHeaders.setBearerAuth(adminLogin.getBody().getData().getAccessToken());
+
+        ProductRequest createReq = ProductRequest.builder()
+                .name("Overlap Test Monitor")
+                .sku("OVR-" + UUID.randomUUID().toString().substring(0, 8))
+                .price(new BigDecimal("15000.00"))
+                .initialStock(40)
+                .active(true)
+                .build();
+        ResponseEntity<ApiResponse<ProductDto>> createdResp = restTemplate.exchange(
+                "/api/v1/admin/products",
+                HttpMethod.POST,
+                new HttpEntity<>(createReq, adminHeaders),
+                new ParameterizedTypeReference<>() {}
+        );
+        assertThat(createdResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        UUID productId = createdResp.getBody().getData().getId();
+
+        // Update product with an imageUrl
+        ProductRequest updateReq = ProductRequest.builder()
+                .name("Overlap Test Monitor")
+                .sku(createReq.getSku())
+                .price(new BigDecimal("15000.00"))
+                .active(true)
+                .imageUrl("/api/v1/images/seed-electronics.svg")
+                .build();
+        ResponseEntity<ApiResponse<ProductDto>> updatedResp = restTemplate.exchange(
+                "/api/v1/admin/products/" + productId,
+                HttpMethod.PUT,
+                new HttpEntity<>(updateReq, adminHeaders),
+                new ParameterizedTypeReference<>() {}
+        );
+        assertThat(updatedResp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(updatedResp.getBody().getData().getImages()).hasSize(1);
+        assertThat(updatedResp.getBody().getData().getImages().get(0).getImageUrl())
+                .isEqualTo("/api/v1/images/seed-electronics.svg");
+
+        // Create two overlapping live flash sales targeting the same product
+        Instant now = Instant.now();
+        FlashSaleRequest sale1 = FlashSaleRequest.builder()
+                .name("Overlap Sale A")
+                .startTime(now.minus(10, ChronoUnit.MINUTES))
+                .endTime(now.plus(2, ChronoUnit.HOURS))
+                .active(true)
+                .items(List.of(FlashSaleItemRequest.builder()
+                        .productId(productId)
+                        .salePrice(new BigDecimal("11999.00"))
+                        .saleStock(10)
+                        .build()))
+                .build();
+        FlashSaleRequest sale2 = FlashSaleRequest.builder()
+                .name("Overlap Sale B")
+                .startTime(now.minus(5, ChronoUnit.MINUTES))
+                .endTime(now.plus(3, ChronoUnit.HOURS))
+                .active(true)
+                .items(List.of(FlashSaleItemRequest.builder()
+                        .productId(productId)
+                        .salePrice(new BigDecimal("9999.00"))
+                        .saleStock(10)
+                        .build()))
+                .build();
+
+        UUID sale1Id = restTemplate.exchange(
+                "/api/v1/admin/flash-sales",
+                HttpMethod.POST,
+                new HttpEntity<>(sale1, adminHeaders),
+                new ParameterizedTypeReference<ApiResponse<FlashSaleDto>>() {}
+        ).getBody().getData().getId();
+        UUID sale2Id = restTemplate.exchange(
+                "/api/v1/admin/flash-sales",
+                HttpMethod.POST,
+                new HttpEntity<>(sale2, adminHeaders),
+                new ParameterizedTypeReference<ApiResponse<FlashSaleDto>>() {}
+        ).getBody().getData().getId();
+
+        ResponseEntity<ApiResponse<ProductDto>> detailResp = restTemplate.exchange(
+                "/api/v1/products/" + productId,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {}
+        );
+        assertThat(detailResp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(detailResp.getBody().getData().getActiveFlashSalePrice())
+                .isEqualByComparingTo("9999.00");
+
+        // Clean up test fixtures
+        restTemplate.exchange("/api/v1/admin/flash-sales/" + sale1Id, HttpMethod.DELETE,
+                new HttpEntity<>(adminHeaders), Void.class);
+        restTemplate.exchange("/api/v1/admin/flash-sales/" + sale2Id, HttpMethod.DELETE,
+                new HttpEntity<>(adminHeaders), Void.class);
+        restTemplate.exchange("/api/v1/admin/products/" + productId, HttpMethod.DELETE,
+                new HttpEntity<>(adminHeaders), Void.class);
     }
 
     private String extractCookieValue(String setCookieHeader, String name) {

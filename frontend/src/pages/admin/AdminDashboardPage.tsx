@@ -11,6 +11,7 @@ import {
   PieChart,
   Pie,
   Cell,
+  Legend,
 } from 'recharts';
 import { IndianRupee, ShoppingBag, Users, Package, AlertTriangle } from 'lucide-react';
 import * as analyticsService from '../../services/analytics.service';
@@ -66,10 +67,12 @@ export default function AdminDashboardPage() {
   }
 
   const stats = dashboardQuery.data;
-  const orderStatusData = Object.entries(stats.ordersByStatus ?? {}).map(([name, value]) => ({
-    name,
-    value,
-  }));
+  const orderStatusData = Object.entries(stats.ordersByStatus ?? {})
+    .filter(([, value]) => value > 0)
+    .map(([name, value]) => ({
+      name,
+      value,
+    }));
 
   return (
     <div className="space-y-6">
@@ -150,6 +153,7 @@ export default function AdminDashboardPage() {
                   stroke="#ea580c"
                   strokeWidth={2.5}
                   dot={false}
+                  isAnimationActive={false}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -173,15 +177,17 @@ export default function AdminDashboardPage() {
                     dataKey="value"
                     nameKey="name"
                     cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    label
+                    cy="46%"
+                    outerRadius={68}
+                    isAnimationActive={false}
+                    label={({ name, value }) => `${name}: ${value}`}
                   >
                     {orderStatusData.map((_, idx) => (
                       <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: '12px' }} />
                 </PieChart>
               </ResponsiveContainer>
             )}

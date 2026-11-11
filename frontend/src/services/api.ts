@@ -82,6 +82,11 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshErr) {
         setAccessToken(null);
+        try {
+          window.localStorage.removeItem('flashcart_has_session');
+        } catch {
+          // Ignore storage restrictions
+        }
         onRefreshFailed(refreshErr);
         return Promise.reject(error);
       } finally {

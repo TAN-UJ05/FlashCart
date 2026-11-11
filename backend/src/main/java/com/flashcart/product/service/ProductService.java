@@ -202,11 +202,38 @@ public class ProductService {
         product.setActive(request.isActive());
 
         product = productRepository.save(product);
+
+        if (request.getImageUrl() != null && !request.getImageUrl().isBlank()) {
+            String trimmedUrl = request.getImageUrl().trim();
+            List<ProductImage> existingImages = productImageRepository.findByProductIdOrderBySortOrderAsc(id);
+            if (existingImages.isEmpty()) {
+                ProductImage image = ProductImage.builder()
+                        .product(product)
+                        .imageUrl(trimmedUrl)
+                        .altText(product.getName())
+                        .sortOrder(0)
+                        .isPrimary(true)
+                        .build();
+                product.getImages().add(productImageRepository.save(image));
+            } else {
+                ProductImage primary = existingImages.stream()
+                        .filter(ProductImage::isPrimary)
+                        .findFirst()
+                        .orElse(existingImages.get(0));
+                if (!trimmedUrl.equals(primary.getImageUrl()) || !primary.isPrimary()) {
+                    primary.setImageUrl(trimmedUrl);
+                    primary.setPrimary(true);
+                    productImageRepository.save(primary);
+                }
+            }
+        }
+
         Inventory inventory = inventoryRepository.findByProductId(id).orElse(null);
         FlashSaleItem liveSale = flashSaleItemRepository.findLiveByProductId(id, Instant.now()).orElse(null);
 
         cacheInvalidationService.evictProductCaches();
-        return toDto(product, inventory, liveSale);
+        List<ProductImage> finalImages = productImageRepository.findByProductIdOrderBySortOrderAsc(id);
+        return toDto(product, inventory, liveSale, finalImages);
     }
 
     @Transactional

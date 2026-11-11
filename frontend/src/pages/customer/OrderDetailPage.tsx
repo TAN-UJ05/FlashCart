@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, CreditCard, MapPin, XCircle } from 'lucide-react';
 import * as orderService from '../../services/order.service';
 import * as paymentService from '../../services/payment.service';
+import { useAuth } from '../../stores/auth.store';
 import { useToast } from '../../stores/toast.store';
 import { extractErrorMessage, formatCurrency, formatDateTime } from '../../utils/format';
 import { OrderStatusBadge } from '../../components/order/OrderStatusBadge';
@@ -18,33 +19,38 @@ export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
 
   const orderQuery = useQuery({
-    queryKey: ['order', id],
+    queryKey: ['order', user?.id ?? 'anon', id],
     queryFn: async () => {
       const res = await orderService.getOrder(id!);
       return res.data;
     },
-    enabled: !!id,
+    enabled: !!id && !!user?.id,
   });
 
   const paymentsQuery = useQuery({
-    queryKey: ['payments', 'order', id],
+    queryKey: ['payments', 'order', user?.id ?? 'anon', id],
     queryFn: async () => {
       const res = await paymentService.getPaymentsForOrder(id!);
       return res.data;
     },
-    enabled: !!id,
+    enabled: !!id && !!user?.id,
   });
 
   const cancelMutation = useMutation({
     mutationFn: () => orderService.cancelOrder(id!),
     onSuccess: () => {
       setConfirmCancelOpen(false);
-      queryClient.invalidateQueries({ queryKey: ['order', id] });
+      queryClient.invalidateQueries({ queryKey: ['order', user?.id ?? 'anon', id] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['product'] });
       toast({
         title: 'Order cancelled',
         description: 'Reserved stock has been released back to inventory.',
@@ -82,19 +88,23 @@ export default function OrderDetailPage() {
 
   const order = orderQuery.data;
   const latestPayment = paymentsQuery.data?.[0];
+  const isOwner = !!user && (!order.userId || order.userId === user.id);
   const canPay =
-    order.status === 'PENDING' ||
-    order.status === 'PAYMENT_PENDING' ||
-    order.status === 'PAYMENT_FAILED';
+    isOwner &&
+    (order.status === 'PENDING' ||
+      order.status === 'PAYMENT_PENDING' ||
+      order.status === 'PAYMENT_FAILED');
   const canCancel =
     order.status === 'PENDING' ||
     order.status === 'PAYMENT_PENDING' ||
-    order.status === 'CONFIRMED';
+    order.status === 'PAYMENT_FAILED' ||
+    (isAdmin && (order.status === 'CONFIRMED' || order.status === 'PROCESSING'));
+  const backTarget = isAdmin && !isOwner ? '/admin/orders' : '/orders';
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       <Link
-        to="/orders"
+        to={backTarget}
         className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900"
       >
         <ArrowLeft className="h-4 w-4" />

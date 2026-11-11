@@ -9,6 +9,7 @@ import * as userService from '../../services/user.service';
 import * as orderService from '../../services/order.service';
 import * as paymentService from '../../services/payment.service';
 import { CART_QUERY_KEY, useCart } from '../../hooks/useCart';
+import { useAuth } from '../../stores/auth.store';
 import { useToast } from '../../stores/toast.store';
 import { extractErrorMessage, generateIdempotencyKey } from '../../utils/format';
 import { CartSummary } from '../../components/cart/CartSummary';
@@ -35,6 +36,7 @@ type ShippingFormValues = z.infer<typeof shippingSchema>;
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const { toast } = useToast();
   const { cart, isLoading: cartLoading } = useCart();
 
@@ -43,16 +45,19 @@ export default function CheckoutPage() {
   const [idempotencyKey] = useState(() => generateIdempotencyKey('checkout'));
 
   const addressesQuery = useQuery({
-    queryKey: ['addresses'],
+    queryKey: ['addresses', user?.id ?? 'anon'],
     queryFn: async () => {
       const res = await userService.getAddresses();
       return res.data;
     },
+    enabled: !!user?.id,
   });
 
   const addresses = addressesQuery.data ?? [];
   const defaultAddrId = addresses.find((a) => a.isDefault)?.id ?? addresses[0]?.id ?? '';
-  const effectiveAddressId = selectedAddressId || defaultAddrId;
+  const effectiveAddressId = addresses.some((a) => a.id === selectedAddressId)
+    ? selectedAddressId
+    : defaultAddrId;
   const useNewAddress =
     addressMode === 'new' || (addressMode === 'auto' && addresses.length === 0);
 
@@ -93,6 +98,9 @@ export default function CheckoutPage() {
     onSuccess: ({ order, payment }) => {
       queryClient.invalidateQueries({ queryKey: CART_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['product'] });
+      queryClient.invalidateQueries({ queryKey: ['flash-sales'] });
       toast({
         title: 'Order placed!',
         description: `Order ${order.orderNumber} reserved inventory. Complete payment now.`,
@@ -109,7 +117,7 @@ export default function CheckoutPage() {
     },
   });
 
-  if (cartLoading) {
+  if (cartLoading || addressesQuery.isLoading) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Skeleton className="h-96 w-full rounded-xl" />

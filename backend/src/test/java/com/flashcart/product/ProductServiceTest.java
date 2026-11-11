@@ -16,6 +16,7 @@ import com.flashcart.inventory.entity.Inventory;
 import com.flashcart.inventory.repository.InventoryRepository;
 import com.flashcart.product.dto.ProductDto;
 import com.flashcart.product.dto.ProductImageDto;
+import com.flashcart.product.dto.ProductRequest;
 import com.flashcart.product.entity.Product;
 import com.flashcart.product.entity.ProductImage;
 import com.flashcart.product.repository.ProductImageRepository;
@@ -40,6 +41,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -231,5 +233,50 @@ class ProductServiceTest {
         assertThat(roundTripped.getAvailableStock()).isEqualTo(98);
         assertThat(roundTripped.getImages()).hasSize(1);
         assertThat(roundTripped.getImages().get(0).isPrimary()).isTrue();
+    }
+
+    @Test
+    void updateProduct_updatesOrCreatesPrimaryImageUrl() {
+        UUID productId = UUID.randomUUID();
+        Product existingProduct = Product.builder()
+                .id(productId)
+                .name("Desk Lamp")
+                .sku("LAMP-001")
+                .price(new BigDecimal("1499.00"))
+                .active(true)
+                .images(new ArrayList<>())
+                .build();
+        ProductImage existingImage = ProductImage.builder()
+                .id(UUID.randomUUID())
+                .product(existingProduct)
+                .imageUrl("/api/v1/images/old.png")
+                .altText("Desk Lamp")
+                .sortOrder(0)
+                .isPrimary(true)
+                .build();
+
+        when(productRepository.findByIdWithDetails(productId)).thenReturn(Optional.of(existingProduct));
+        when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(productImageRepository.findByProductIdOrderBySortOrderAsc(productId))
+                .thenReturn(new ArrayList<>(List.of(existingImage)));
+        when(productImageRepository.save(any(ProductImage.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(inventoryRepository.findByProductId(productId)).thenReturn(Optional.empty());
+        when(flashSaleItemRepository.findLiveByProductId(eq(productId), any(Instant.class)))
+                .thenReturn(Optional.empty());
+
+        ProductRequest request = ProductRequest.builder()
+                .name("Desk Lamp Pro")
+                .sku("LAMP-001")
+                .price(new BigDecimal("1799.00"))
+                .active(true)
+                .imageUrl("https://cdn.example.com/lamp-pro.png")
+                .build();
+
+        ProductDto updated = productService.updateProduct(productId, request);
+
+        assertThat(updated.getName()).isEqualTo("Desk Lamp Pro");
+        assertThat(updated.getImages()).hasSize(1);
+        assertThat(updated.getImages().get(0).getImageUrl()).isEqualTo("https://cdn.example.com/lamp-pro.png");
+        verify(cacheInvalidationService, times(1)).evictProductCaches();
     }
 }

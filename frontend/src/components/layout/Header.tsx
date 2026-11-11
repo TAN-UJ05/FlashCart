@@ -29,8 +29,9 @@ export function Header() {
   };
 
   const handleLogout = async () => {
+    setMobileMenuOpen(false);
+    navigate('/', { replace: true });
     await logout();
-    navigate('/');
   };
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>

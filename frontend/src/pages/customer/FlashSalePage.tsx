@@ -19,7 +19,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 
 export default function FlashSalePage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -42,27 +42,42 @@ export default function FlashSalePage() {
   });
 
   const addressesQuery = useQuery({
-    queryKey: ['addresses'],
+    queryKey: ['addresses', user?.id ?? 'anon'],
     queryFn: async () => {
       const res = await userService.getAddresses();
       return res.data;
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !!user?.id,
   });
+
+  const savedAddresses = addressesQuery.data ?? [];
+  const effectiveAddressId = savedAddresses.some((a) => a.id === selectedAddressId)
+    ? selectedAddressId
+    : '';
 
   const purchaseMutation = useMutation({
     mutationFn: async (item: FlashSaleItem) => {
+      if (
+        !effectiveAddressId &&
+        (!shippingFullName.trim() ||
+          !shippingAddressLine1.trim() ||
+          !shippingCity.trim() ||
+          !shippingState.trim() ||
+          !shippingPostalCode.trim())
+      ) {
+        throw new Error('Please fill in all required shipping address fields.');
+      }
       const idempotencyKey = generateIdempotencyKey('fs');
       const res = await flashSaleService.purchaseFlashSaleItem(item.flashSaleId, {
         productId: item.productId,
         quantity: 1,
         idempotencyKey,
-        addressId: selectedAddressId || undefined,
-        shippingFullName: selectedAddressId ? undefined : shippingFullName,
-        shippingAddressLine1: selectedAddressId ? undefined : shippingAddressLine1,
-        shippingCity: selectedAddressId ? undefined : shippingCity,
-        shippingState: selectedAddressId ? undefined : shippingState,
-        shippingPostalCode: selectedAddressId ? undefined : shippingPostalCode,
+        addressId: effectiveAddressId || undefined,
+        shippingFullName: effectiveAddressId ? undefined : shippingFullName.trim(),
+        shippingAddressLine1: effectiveAddressId ? undefined : shippingAddressLine1.trim(),
+        shippingCity: effectiveAddressId ? undefined : shippingCity.trim(),
+        shippingState: effectiveAddressId ? undefined : shippingState.trim(),
+        shippingPostalCode: effectiveAddressId ? undefined : shippingPostalCode.trim(),
       });
       const order = res.data;
       const payRes = await paymentService.initiatePayment(order.id, order.id);
@@ -71,6 +86,9 @@ export default function FlashSalePage() {
     onSuccess: ({ order, payment }) => {
       setSelectedItem(null);
       queryClient.invalidateQueries({ queryKey: ['flash-sales', 'active'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['product'] });
       toast({
         title: 'Flash sale item reserved!',
         description: `Order ${order.orderNumber} created. Complete payment to confirm.`,
@@ -92,10 +110,13 @@ export default function FlashSalePage() {
       navigate('/login');
       return;
     }
-    const defaultAddr = addressesQuery.data?.find((a) => a.isDefault) ?? addressesQuery.data?.[0];
-    if (defaultAddr) {
-      setSelectedAddressId(defaultAddr.id);
-    }
+    const defaultAddr = savedAddresses.find((a) => a.isDefault) ?? savedAddresses[0];
+    setSelectedAddressId(defaultAddr?.id ?? '');
+    setShippingFullName('');
+    setShippingAddressLine1('');
+    setShippingCity('');
+    setShippingState('');
+    setShippingPostalCode('');
     setSelectedItem(item);
   };
 
@@ -168,18 +189,18 @@ export default function FlashSalePage() {
       >
         {selectedItem && (
           <div className="space-y-4">
-            {addressesQuery.data && addressesQuery.data.length > 0 && (
+            {savedAddresses.length > 0 && (
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-gray-700">
                   Select Saved Address
                 </label>
                 <select
-                  value={selectedAddressId}
+                  value={effectiveAddressId}
                   onChange={(e) => setSelectedAddressId(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                 >
                   <option value="">Enter a new shipping address</option>
-                  {addressesQuery.data.map((addr) => (
+                  {savedAddresses.map((addr) => (
                     <option key={addr.id} value={addr.id}>
                       {addr.fullName} — {addr.addressLine1}, {addr.city}
                     </option>
@@ -188,7 +209,7 @@ export default function FlashSalePage() {
               </div>
             )}
 
-            {!selectedAddressId && (
+            {!effectiveAddressId && (
               <div className="space-y-3">
                 <Input
                   label="Full Name"

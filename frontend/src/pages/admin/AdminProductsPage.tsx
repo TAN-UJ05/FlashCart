@@ -39,6 +39,8 @@ export default function AdminProductsPage() {
     onSuccess: () => {
       setDeleteTarget(null);
       queryClient.invalidateQueries({ queryKey: ['admin', 'products'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['flash-sales'] });
       toast({ title: 'Product deactivated', variant: 'info' });
     },
     onError: (err) => {

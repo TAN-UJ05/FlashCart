@@ -32,8 +32,14 @@ public interface FlashSaleItemRepository extends JpaRepository<FlashSaleItem, UU
               AND fs.active = true
               AND fs.startTime <= :now
               AND fs.endTime >= :now
+              AND fsi.soldCount < fsi.saleStock
+            ORDER BY fsi.salePrice ASC, fs.endTime ASC
             """)
-    Optional<FlashSaleItem> findLiveByProductId(@Param("productId") UUID productId, @Param("now") Instant now);
+    List<FlashSaleItem> findLiveListByProductId(@Param("productId") UUID productId, @Param("now") Instant now);
+
+    default Optional<FlashSaleItem> findLiveByProductId(UUID productId, Instant now) {
+        return findLiveListByProductId(productId, now).stream().findFirst();
+    }
 
     @Query("""
             SELECT fsi FROM FlashSaleItem fsi
@@ -42,6 +48,8 @@ public interface FlashSaleItemRepository extends JpaRepository<FlashSaleItem, UU
               AND fs.active = true
               AND fs.startTime <= :now
               AND fs.endTime >= :now
+              AND fsi.soldCount < fsi.saleStock
+            ORDER BY fsi.salePrice ASC, fs.endTime ASC
             """)
     List<FlashSaleItem> findLiveByProductIds(@Param("productIds") Collection<UUID> productIds, @Param("now") Instant now);
 

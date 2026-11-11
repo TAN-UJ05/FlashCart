@@ -43,7 +43,13 @@ export default function LoginPage() {
         title: `Welcome back, ${user.firstName}!`,
         variant: 'success',
       });
-      if (from) {
+      const canReturnToFrom =
+        !!from &&
+        from !== '/login' &&
+        from !== '/register' &&
+        (!from.startsWith('/admin') || user.role === 'ADMIN');
+
+      if (canReturnToFrom) {
         navigate(from, { replace: true });
       } else if (user.role === 'ADMIN') {
         navigate('/admin', { replace: true });

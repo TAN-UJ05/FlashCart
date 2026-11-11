@@ -12,17 +12,22 @@ import { extractErrorMessage } from '../../utils/format';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
+import { ErrorState } from '../../components/ui/ErrorState';
 import { Skeleton } from '../../components/ui/Skeleton';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Product name is required').max(255),
   sku: z.string().min(1, 'SKU is required').max(100),
   description: z.string().optional(),
-  price: z.number().min(0, 'Price must be >= 0'),
-  compareAtPrice: z.number().min(0).nullable().optional(),
+  price: z.number({ error: 'Price is required' }).min(0, 'Price must be >= 0'),
+  compareAtPrice: z.number({ error: 'Invalid price' }).min(0).nullable().optional(),
   categoryId: z.number().nullable().optional(),
   active: z.boolean(),
-  initialStock: z.number().min(0).optional(),
+  initialStock: z
+    .number({ error: 'Initial stock must be a whole number' })
+    .int('Initial stock must be a whole number')
+    .min(0, 'Initial stock must be >= 0')
+    .optional(),
   imageUrl: z.string().optional(),
 });
 
@@ -67,7 +72,9 @@ export default function AdminProductFormPage() {
             categoryId: existing.categoryId ?? null,
             active: existing.active,
             initialStock: existing.totalStock,
-            imageUrl: existing.images?.[0]?.imageUrl ?? '',
+            imageUrl:
+              (existing.images?.find((img) => img.isPrimary) ?? existing.images?.[0])?.imageUrl ??
+              '',
           }
         : undefined,
     [existing]
@@ -158,8 +165,19 @@ export default function AdminProductFormPage() {
     setSelectedFile(file);
   };
 
-  if (isEdit && productQuery.isLoading) {
+  if (isEdit && (productQuery.isLoading || categoriesQuery.isLoading)) {
     return <Skeleton className="h-96 w-full max-w-3xl rounded-xl" />;
+  }
+
+  if (isEdit && (productQuery.isError || !existing)) {
+    return (
+      <div className="max-w-3xl space-y-6">
+        <ErrorState
+          title="Could not load product"
+          onRetry={() => productQuery.refetch()}
+        />
+      </div>
+    );
   }
 
   return (
@@ -214,7 +232,10 @@ export default function AdminProductFormPage() {
                 type="number"
                 step="0.01"
                 error={errors.price?.message}
-                {...register('price', { valueAsNumber: true })}
+                {...register('price', {
+                  setValueAs: (v) =>
+                    v === '' || v === null || v === undefined ? undefined : Number(v),
+                })}
               />
               <Input
                 label="Compare-At Price (₹)"
@@ -230,7 +251,10 @@ export default function AdminProductFormPage() {
                   label="Initial Stock"
                   type="number"
                   error={errors.initialStock?.message}
-                  {...register('initialStock', { valueAsNumber: true })}
+                  {...register('initialStock', {
+                    setValueAs: (v) =>
+                      v === '' || v === null || v === undefined ? undefined : Number(v),
+                  })}
                 />
               )}
             </div>
@@ -305,9 +329,13 @@ export default function AdminProductFormPage() {
             </label>
 
             <div className="flex justify-end gap-3 pt-4">
-              <Link to="/admin/products">
-                <Button variant="outline">Cancel</Button>
-              </Link>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate('/admin/products')}
+              >
+                Cancel
+              </Button>
               <Button
                 type="submit"
                 isLoading={saveMutation.isPending}

@@ -1,6 +1,5 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Search, X } from 'lucide-react';
-import { useDebounce } from '../../hooks/useDebounce';
 import { cn } from '../../utils/cn';
 
 export interface SearchInputProps {
@@ -24,7 +23,7 @@ export function SearchInput({
 }: SearchInputProps) {
   const [innerValue, setInnerValue] = useState(value);
   const [prevValue, setPrevValue] = useState(value);
-  const debounced = useDebounce(innerValue, debounceMs);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   if (value !== prevValue) {
     setPrevValue(value);
@@ -32,13 +31,40 @@ export function SearchInput({
   }
 
   useEffect(() => {
-    if (onChange && debounced !== value) {
-      onChange(debounced);
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
+  const clearPendingTimer = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
     }
-  }, [debounced, onChange, value]);
+  };
+
+  const handleInputChange = (nextValue: string) => {
+    setInnerValue(nextValue);
+    clearPendingTimer();
+    if (onChange) {
+      timerRef.current = setTimeout(() => {
+        timerRef.current = null;
+        onChange(nextValue);
+      }, debounceMs);
+    }
+  };
+
+  const handleClear = () => {
+    clearPendingTimer();
+    setInnerValue('');
+    onChange?.('');
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    clearPendingTimer();
     onSubmit?.(innerValue.trim());
   };
 
@@ -49,17 +75,14 @@ export function SearchInput({
         type="search"
         value={innerValue}
         data-testid={testId}
-        onChange={(e) => setInnerValue(e.target.value)}
+        onChange={(e) => handleInputChange(e.target.value)}
         placeholder={placeholder}
         className="h-10 w-full rounded-lg border border-gray-300 bg-white pl-9 pr-8 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
       />
       {innerValue && (
         <button
           type="button"
-          onClick={() => {
-            setInnerValue('');
-            onChange?.('');
-          }}
+          onClick={handleClear}
           aria-label="Clear search"
           className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
         >

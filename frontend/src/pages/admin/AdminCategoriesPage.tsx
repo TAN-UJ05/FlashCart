@@ -20,7 +20,10 @@ const categorySchema = z.object({
   name: z.string().min(1, 'Category name is required').max(100),
   slug: z.string().max(100).optional(),
   description: z.string().optional(),
-  sortOrder: z.number().min(0),
+  sortOrder: z
+    .number({ error: 'Sort order is required' })
+    .int('Sort order must be a whole number')
+    .min(0, 'Sort order must be >= 0'),
   active: z.boolean(),
 });
 
@@ -73,6 +76,9 @@ export default function AdminCategoriesPage() {
       queryClient.invalidateQueries({ queryKey: ['admin', 'categories'] });
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast({ title: 'Category deactivated', variant: 'info' });
+    },
+    onError: (err) => {
+      toast({ title: 'Action failed', description: extractErrorMessage(err), variant: 'error' });
     },
   });
 
@@ -185,7 +191,10 @@ export default function AdminCategoriesPage() {
             label="Sort Order"
             type="number"
             error={errors.sortOrder?.message}
-            {...register('sortOrder', { valueAsNumber: true })}
+            {...register('sortOrder', {
+              setValueAs: (v) =>
+                v === '' || v === null || v === undefined ? undefined : Number(v),
+            })}
           />
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input type="checkbox" {...register('active')} />

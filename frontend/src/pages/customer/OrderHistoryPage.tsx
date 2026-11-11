@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Package } from 'lucide-react';
 import * as orderService from '../../services/order.service';
+import { useAuth } from '../../stores/auth.store';
 import { OrderCard } from '../../components/order/OrderCard';
 import { Pagination } from '../../components/ui/Pagination';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -11,14 +12,16 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { Button } from '../../components/ui/Button';
 
 export default function OrderHistoryPage() {
+  const { user } = useAuth();
   const [page, setPage] = useState(0);
 
   const ordersQuery = useQuery({
-    queryKey: ['orders', page],
+    queryKey: ['orders', user?.id ?? 'anon', page],
     queryFn: async () => {
       const res = await orderService.getOrders({ page, size: 10 });
       return res.data;
     },
+    enabled: !!user?.id,
   });
 
   return (

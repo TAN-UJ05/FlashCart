@@ -124,9 +124,10 @@ public class UserService {
     @Transactional(readOnly = true)
     public PageResponse<UserDto> listCustomers(String search, Pageable pageable) {
         String normalizedSearch = (search != null && !search.isBlank()) ? search.trim() : null;
-        Page<UserDto> page = userRepository.searchUsers(UserRole.CUSTOMER, normalizedSearch, pageable)
-                .map(this::toUserDto);
-        return PageResponse.from(page);
+        Page<User> userPage = normalizedSearch == null
+                ? userRepository.findByRole(UserRole.CUSTOMER, pageable)
+                : userRepository.searchUsersByRole(UserRole.CUSTOMER, normalizedSearch, pageable);
+        return PageResponse.from(userPage.map(this::toUserDto));
     }
 
     @Transactional

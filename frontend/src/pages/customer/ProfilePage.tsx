@@ -75,11 +75,12 @@ export default function ProfilePage() {
   });
 
   const addressesQuery = useQuery({
-    queryKey: ['addresses'],
+    queryKey: ['addresses', user?.id ?? 'anon'],
     queryFn: async () => {
       const res = await userService.getAddresses();
       return res.data;
     },
+    enabled: !!user?.id,
   });
 
   const updateProfileMutation = useMutation({
