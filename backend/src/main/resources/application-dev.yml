@@ -1,0 +1,9 @@
+logging:
+  level:
+    com.flashcart: DEBUG
+    org.springframework.web: INFO
+
+flashcart:
+  jwt:
+    secret: ${FLASHCART_JWT_SECRET:flashcart-dev-secret-key-at-least-64-characters-long-for-hs256-security-2026}
+    cookie-secure: false

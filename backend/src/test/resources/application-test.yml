@@ -1,0 +1,22 @@
+spring:
+  jpa:
+    show-sql: false
+  kafka:
+    listener:
+      auto-startup: false
+
+flashcart:
+  jwt:
+    secret: ${FLASHCART_JWT_SECRET:flashcart-test-secret-key-at-least-64-characters-long-for-hs256-security-2026}
+  cache:
+    enabled: false
+  rate-limit:
+    auth-requests-per-minute: 1000
+    flash-sale-requests-per-minute: 20000
+  upload:
+    directory: ${java.io.tmpdir}/flashcart-test-uploads
+
+logging:
+  level:
+    com.flashcart: INFO
+    org.testcontainers: INFO

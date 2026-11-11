@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#064e3b"/><stop offset="100%" stop-color="#022c22"/></linearGradient></defs>
+  <rect width="400" height="300" fill="url(#g)"/>
+  <path d="M120 140 L200 75 L280 140 M140 125 L140 220 L260 220 L260 125" fill="none" stroke="#6ee7b7" stroke-width="6" stroke-linejoin="round"/>
+  <rect x="180" y="165" width="40" height="55" fill="none" stroke="#6ee7b7" stroke-width="5"/>
+  <text x="200" y="265" text-anchor="middle" fill="#a7f3d0" font-family="sans-serif" font-size="16" font-weight="600">HOME &amp; KITCHEN</text>
+</svg>

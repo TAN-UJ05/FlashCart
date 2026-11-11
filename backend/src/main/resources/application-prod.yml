@@ -1,0 +1,36 @@
+spring:
+  datasource:
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  jpa:
+    show-sql: false
+
+  data:
+    redis:
+      ssl:
+        enabled: ${REDIS_SSL:false}
+
+  kafka:
+    listener:
+      auto-startup: ${KAFKA_ENABLED:true}
+
+flashcart:
+  jwt:
+    cookie-secure: ${FLASHCART_COOKIE_SECURE:true}
+  kafka:
+    enabled: ${KAFKA_ENABLED:true}
+
+management:
+  endpoint:
+    health:
+      show-details: ${HEALTH_SHOW_DETAILS:when_authorized}
+
+springdoc:
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:false}
+
+logging:
+  level:
+    com.flashcart: ${LOG_LEVEL:INFO}
