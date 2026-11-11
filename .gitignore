@@ -1,0 +1,49 @@
+# Java / Maven
+backend/target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+.mvn/wrapper/maven-wrapper.jar
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Environment
+.env
+.env.local
+.env.production
+*.env
+
+# IDE
+.idea/
+*.iml
+.vscode/settings.json
+.eclipse/
+*.classpath
+backend/.project
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads (local dev only)
+backend/uploads/
+uploads/
+
+# Docker
+*.pid
+
+# Logs
+logs/
+*.log
+
+# Test artifacts
+tests/load/results/*.json
+tests/e2e/node_modules/
+tests/e2e/test-results/
+tests/e2e/playwright-report/
+test-results/
