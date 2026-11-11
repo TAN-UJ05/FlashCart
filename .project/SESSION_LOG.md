@@ -14,3 +14,18 @@
    - Grafana k6 load & rush suite (`product-browsing.js`, `checkout-flow.js`, `flash-sale-concurrency.js`) verified with live PostgreSQL invariant check (`ELEC-001 sold_count=100/100`, `reserved_stock=100`, `flash_sale_orders=100`, `0` oversells).
 6. **Observability & Stack Reset**: Provisioned Prometheus + Grafana (`FlashCart Backend Overview`), cleanly reset volumes (`docker-compose down -v; docker-compose up -d --no-build`) so live app starts fresh and healthy on `localhost:3000` / `:8080` / `:9090` / `:3001`.
 7. **Documentation & Audit**: Authored `README.md` + 14 engineering docs in `docs/` (15 total), resolved CI/doc/gitignore findings (`#59`–`#62`), updated all `.project/*.md` files, and prepared local milestone commits (no remote push without user approval).
+
+
+## Session 2026-11-12 — Full-Stack Bugfix Audit, Live Verification & Redeployment
+
+### Issues Diagnosed & Fixed
+1. **`/admin/customers` HTTP 500 (`function lower(bytea) does not exist`)**: Removed nullable `:search IS NULL OR LOWER(...)` JPQL pattern in `UserRepository`; branched `UserService.listCustomers` explicitly between `findByRole` and `searchUsersByRole`; clamped `page`/`size` bounds in `AdminCustomerController`.
+2. **Overlapping Live Flash Sales 500 (`IncorrectResultSizeDataAccessException`)**: Updated `FlashSaleItemRepository.findLiveByProductId` and `findLiveByProductIds` to return ordered non-sold-out candidates deterministically (`fsi.soldCount < fsi.saleStock ORDER BY fsi.salePrice ASC, fs.endTime ASC`).
+3. **Product Edit `imageUrl` Ignored**: Updated `ProductService.updateProduct` to update existing primary `ProductImage` or insert one when `imageUrl` is provided, and updated `AdminProductFormPage` to load primary image URL, wait for `categoriesQuery`, handle Zod v4 numeric inputs (`setValueAs`), replace nested `<Link><Button>`, and invalidate storefront caches on deactivation.
+4. **SPA Auth, Session Hint & Cross-User Cache Isolation**: Eliminated anonymous initial-load `401 /api/v1/auth/refresh` noise via `flashcart_has_session` storage hint (`auth.store.tsx` / `api.ts`), cleared React Query cache on login/register/logout/failed refresh, scoped private query keys by `user?.id ?? 'anon'` across customer pages, and fixed post-logout stale private route redirect (`Header`, `AdminLayout`, `LoginPage`).
+5. **Admin & Storefront UI Guards**: Fixed `SearchInput` Clear (`X`) timer snap-back (`useRef`), fixed `AdminFlashSalesPage` local `datetime-local` timezone formatting + modal reset/validation + item remove button, enforced server-matching order status transitions in `AdminOrdersPage` and ownership/role pay/cancel guards in `OrderDetailPage`/`PaymentResultPage`, enforced integer adjustment validation in `AdminInventoryPage`, and filtered zero-count `PieChart` slices with legend formatting in `AdminDashboardPage`.
+
+### Verification Summary (`2026-11-12`)
+- **Backend (`mvn test -o -f backend/pom.xml "-Dspring.profiles.active=test"`)**: **`46/46 PASS` (`02:49 min`)** with real PostgreSQL 16, Redis 7, and Kafka 7.6 Testcontainers (including 3 new regression tests).
+- **Frontend**: `oxlint` **`0` errors**; Vitest **`5 files / 13 tests PASS`** (`search-input.test.tsx` added); `tsc -b && vite build` **PASS**.
+- **Live Docker Stack (`docker-compose`)**: Rebuilt `flashcart-backend:latest` and `flashcart-frontend:latest`; Playwright E2E **`2/2 PASS (23.0s)`** and full interactive browser audits passed with **`0` console/page/HTTP errors**.

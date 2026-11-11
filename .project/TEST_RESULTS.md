@@ -1,6 +1,6 @@
 # FlashCart — Test Results & Verification Log
 
-All records below capture actual executed commands, environment conditions, and observed outputs on **2026-11-11** (latest post-`#55` code revision).
+All records below capture actual executed commands, environment conditions, and observed outputs through **2026-11-12** (latest bugfix & regression verification pass).
 
 ---
 
@@ -17,50 +17,52 @@ All records below capture actual executed commands, environment conditions, and 
 
 ---
 
-## 2. Backend Full Suite — Unit + Testcontainers Integration + Concurrency (Post-`#55`)
+## 2. Backend Full Suite — Unit + Testcontainers Integration + Concurrency (`2026-11-12`)
 **Command**:
 ```powershell
-$env:PATH = ($env:PATH -split ';' | ForEach-Object { $_.Trim('"') }) -join ';'
-$env:DOCKER_HOST = 'npipe:////./pipe/docker_engine'
-mvn test -o -f C:\Users\tanuj\Desktop\FlashCart\backend\pom.xml "-Dspring.profiles.active=test"
+mvn test -o -f backend/pom.xml "-Dspring.profiles.active=test"
 ```
 **Environment**: Real Testcontainers (`postgres:16-alpine`, `redis:7-alpine`, `confluentinc/cp-kafka:7.6.0`), Flyway migrations `V1`–`V3` (19 tables), Hibernate `ddl-auto: validate`, `spring.profiles.active=test`.
-**Summary**: **`Tests run: 43, Failures: 0, Errors: 0, Skipped: 0 — BUILD SUCCESS` (`02:49 min`, finished `2026-11-11T23:05:08+05:30`)**.
+**Summary**: **`Tests run: 46, Failures: 0, Errors: 0, Skipped: 0 — BUILD SUCCESS` (`02:49 min`, finished `2026-11-12T00:09:25+05:30`)**.
 
 | Test Class | Tests Run | Failures / Errors / Skipped | Time Elapsed | Scope Verified |
 |---|---|---|---|---|
-| `AuthServiceTest` | 5 | 0 / 0 / 0 | `4.661 s` | Register, duplicate email rejection, refresh rotation & reuse detection revoking user tokens |
-| `CartServiceTest` | 4 | 0 / 0 / 0 | `1.111 s` | Add/update/remove cart items, server-side subtotal calculation |
-| `RateLimitAndDtoTest` | 2 | 0 / 0 / 0 | `1.076 s` | Bucket4j auth/flash-sale throttling + DTO validation constraints |
-| `InventoryServiceTest` | 8 | 0 / 0 / 0 | `1.862 s` | `total - reserved` stock invariant, `InsufficientInventoryException`, reserve/confirm/release/expiry claims |
-| `OrderServiceTest` | 5 | 0 / 0 / 0 | `0.514 s` | Order state transitions, immutable `OrderItem` snapshots, IDOR ownership rejection |
-| `PaymentServiceTest` | 7 | 0 / 0 / 0 | `0.366 s` | Payment idempotency key deduplication, success/fail callbacks, late-payment auto-refund after expiry |
-| `ProductServiceTest` | 3 | 0 / 0 / 0 | `0.897 s` | Batched page loading (category/images/inventory/live flash sale) + Redis `PageResponse<ProductDto>` JSON round-trip |
-| `AuthIntegrationTest` *(Testcontainers)* | 2 | 0 / 0 / 0 | `104.4 s` | Full PG+Redis+Kafka boot, Flyway `V1`–`V3` seed check, login/refresh/reuse-detection/reset/logout, trigram search |
-| `FlashSaleConcurrencyIntegrationTest` *(Testcontainers)* | 3 | 0 / 0 / 0 | `34.90 s` | **100 stock / 10,000 concurrent attempts** (100 threads + `CountDownLatch`: `100` confirmed, `9,900` rejected, **`0` oversells**); plus Redis-bypassed direct PG `25/250` locking; plus Redis counter sync & per-user idempotency |
-| `KafkaOutboxIntegrationTest` *(Testcontainers)* | 1 | 0 / 0 / 0 | `0.421 s` | `outbox_events` relay -> Kafka broker -> `KafkaEventConsumer` + `processed_events` deduplication |
-| `OrderPaymentIntegrationTest` *(Testcontainers)* | 3 | 0 / 0 / 0 | `1.773 s` | End-to-end checkout, payment confirmation/failure release, per-user idempotency isolation, late payment auto-refund |
+| `AuthServiceTest` | 5 | 0 / 0 / 0 | `4.074 s` | Register, duplicate email rejection, refresh rotation & reuse detection revoking user tokens |
+| `CartServiceTest` | 4 | 0 / 0 / 0 | `1.616 s` | Add/update/remove cart items, server-side subtotal calculation |
+| `RateLimitAndDtoTest` | 2 | 0 / 0 / 0 | `1.451 s` | Bucket4j auth/flash-sale throttling + DTO validation constraints |
+| `InventoryServiceTest` | 8 | 0 / 0 / 0 | `1.956 s` | `total - reserved` stock invariant, `InsufficientInventoryException`, reserve/confirm/release/expiry claims |
+| `OrderServiceTest` | 5 | 0 / 0 / 0 | `0.718 s` | Order state transitions, immutable `OrderItem` snapshots, IDOR ownership rejection |
+| `PaymentServiceTest` | 7 | 0 / 0 / 0 | `0.529 s` | Payment idempotency key deduplication, success/fail callbacks, late-payment auto-refund after expiry |
+| `ProductServiceTest` | 4 | 0 / 0 / 0 | `0.901 s` | Batched page loading (category/images/inventory/live flash sale), Redis round-trip, `updateProduct` primary `imageUrl` creation/update |
+| `AuthIntegrationTest` *(Testcontainers)* | 4 | 0 / 0 / 0 | `103.0 s` | Full PG+Redis+Kafka boot, Flyway `V1`–`V3` seed check, login/refresh/reuse-detection/reset/logout, trigram search, `/api/v1/admin/customers` search & RBAC guard (no Hibernate `lower(bytea)` 500), overlapping live flash sales + `imageUrl` update |
+| `FlashSaleConcurrencyIntegrationTest` *(Testcontainers)* | 3 | 0 / 0 / 0 | `39.02 s` | **100 stock / 10,000 concurrent attempts** (100 threads + `CountDownLatch`: `100` confirmed, `9,900` rejected, **`0` oversells**); plus Redis-bypassed direct PG `25/250` locking; plus Redis counter sync & per-user idempotency |
+| `KafkaOutboxIntegrationTest` *(Testcontainers)* | 1 | 0 / 0 / 0 | `0.590 s` | `outbox_events` relay -> Kafka broker -> `KafkaEventConsumer` + `processed_events` deduplication |
+| `OrderPaymentIntegrationTest` *(Testcontainers)* | 3 | 0 / 0 / 0 | `2.221 s` | End-to-end checkout, payment confirmation/failure release, per-user idempotency isolation, late payment auto-refund |
 
 ---
 
-## 3. Frontend Lint, Unit Tests & Production Build
+## 3. Frontend Lint, Unit Tests & Production Build (`2026-11-12`)
 | Check | Command | Observed Result |
 |---|---|---|
-| Lint (`oxlint`) | `npm --prefix C:\Users\tanuj\Desktop\FlashCart\frontend run lint` | **PASS** — `0` errors (`2` Fast Refresh warnings), `82` files, `227ms` |
-| Unit Tests (`Vitest` + RTL) | `npm --prefix C:\Users\tanuj\Desktop\FlashCart\frontend test -- --run` | **PASS** — `4` files (`format.test.ts`, `cart.test.tsx`, `product.test.tsx`, `auth.test.tsx`), **`11/11` tests passed**, `27.96s` |
-| TypeScript + Vite Build | `npm --prefix C:\Users\tanuj\Desktop\FlashCart\frontend run build` | **PASS** — Exit code `0` (`dist/` clean, rebuilt into `flashcart-frontend:latest` nginx container) |
+| Lint (`oxlint`) | `npm --prefix frontend run lint` | **PASS** — `0` errors (`2` Fast Refresh warnings), `83` files, `223ms` |
+| Unit Tests (`Vitest` + RTL) | `npm --prefix frontend test -- --run` | **PASS** — `5` files (`format.test.ts` 3, `search-input.test.tsx` 2, `cart.test.tsx` 2, `product.test.tsx` 3, `auth.test.tsx` 3), **`13/13` tests passed**, `28.33s` |
+| TypeScript + Vite Build | `npm --prefix frontend run build` | **PASS** — Exit code `0` (`dist/` built in `10.77s`, deployed to `flashcart-frontend:latest`) |
 
 ---
 
-## 4. Playwright Browser End-to-End Tests (Post-`#55`)
-**Command**:
+## 4. Playwright Browser E2E & Live Full-Stack Audits (`2026-11-12`)
+**E2E Command**:
 ```powershell
-npm --prefix C:\Users\tanuj\Desktop\FlashCart\tests\e2e test -- --reporter=list
+npm --prefix tests/e2e test -- --reporter=list
 ```
-**Environment**: Chromium against live 8-container Docker Compose stack (`http://localhost:3000`).
-**Result**: **`2 passed (19.6 s)`**:
-- `Customer Journey › complete purchase flow` (`12.8 s`): Browse products → search (`laptop`) → register customer → add item to cart → cart badge updates → checkout shipping form → place order → simulated payment success → verified in `/orders`.
-- `Customer Journey › admin can manage products` (`3.7 s`): Admin login → `/admin/products` → create product (including post-`#55` Redis cache eviction) → visible in UI catalog list.
+**Environment**: Chromium against live 8-container Docker Compose stack (`http://localhost:3000`, rebuilt `flashcart-backend:latest` & `flashcart-frontend:latest`).
+**Result**: **`2 passed (23.0 s)`**:
+- `Customer Journey › complete purchase flow` (`13.0 s`): Browse products → search (`laptop`) → register customer → add item to cart → cart badge updates → checkout shipping form → place order → simulated payment success → verified in `/orders`.
+- `Customer Journey › admin can manage products` (`6.3 s`): Admin login → `/admin/products` → create product (including cache eviction) → visible in UI catalog list.
+
+**Live Full-Stack Browser Verification (0 console errors, 0 `pageerror`s, 0 unexpected 4xx/5xx)**:
+- Regression & state-isolation audit (`verify_live_fixes.mjs`): **PASS (`0` errors)** — verified anonymous route crawl with zero `401 /api/v1/auth/refresh` noise, reload session persistence via `flashcart_has_session`, user-switch React Query cache isolation (`customer1` -> `admin`), `/admin/customers` seeded customer display + search + Clear `X` no-snap-back + status toggle, categorized product edit form pre-population, inventory integer adjustment guard, local timezone `datetime-local` flash-sale defaults, and admin `OrderDetail` pay/cancel guards.
+- Interactive mutation audit (`verify_live_mutations.mjs`): **PASS (`0` errors)** — verified `/admin` Dashboard charts, Categories Create/Edit/Deactivate, Products Create + Edit `imageUrl` persistence + Deactivate, overlapping live Flash Sale creation + storefront browsing (`/flash-sales` & `/products`) + Deactivate, Customer cart -> checkout -> `Simulate Success` -> `/orders/<id>` Confirmed, clean post-logout redirect (no stale private `from` state), and live `PieChart` non-zero `CONFIRMED` slice rendering.
 
 ---
 

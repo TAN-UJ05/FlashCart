@@ -1,7 +1,7 @@
 # FlashCart — Next Actions
 
 ## Current State
-All local development, optimization, full-stack container orchestration, automated test suites (`43/43` backend + Testcontainers, `11/11` Vitest, `2/2` Playwright E2E), k6 load & 10,000-attempt flash-sale concurrency verification, observability provisioning, and engineering documentation are **complete** and recorded locally on branch `master`.
+All local development, optimization, full-stack bugfixes, container orchestration, automated test suites (`46/46` backend + Testcontainers, `13/13` Vitest, `2/2` Playwright E2E, zero-error live browser audits), k6 load & 10,000-attempt flash-sale concurrency verification, observability provisioning, and engineering documentation are **complete** and recorded locally on branch `master`.
 
 ## Optional Next Actions (Requires User Input / Authorization)
 1. **Remote GitHub Push & CI Execution** *(Free — Requires user GitHub repo URL & permission)*
@@ -12,7 +12,7 @@ All local development, optimization, full-stack container orchestration, automat
 
 ## Live Local Services Currently Running
 - Storefront & Admin UI: `http://localhost:3000` (Nginx + `/api/*` proxy; seeded admin `admin@flashcart.com` / `Admin@123456`, customers `customer1@flashcart.com` & `customer2@flashcart.com` / `Customer@123`)
-- Backend API & Swagger UI: `http://localhost:8080/swagger-ui.html` (`Actuator /actuator/health` -> `UP`)
+- Backend API & Swagger UI: `http://localhost:8080/swagger-ui/index.html` (`Actuator /actuator/health` -> `UP`)
 - Grafana & Prometheus: `http://localhost:3001` (`admin`/`admin`) & `http://localhost:9090`
 
 ## Session Recovery Protocol
