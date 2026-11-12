@@ -1,5 +1,6 @@
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${PORT:${SERVER_PORT:8080}}
+  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:framework}
 
 spring:
   application:
@@ -11,8 +12,8 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:flashcart_dev}
     driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: 30
-      minimum-idle: 5
+      maximum-pool-size: ${DB_POOL_MAX:30}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
       connection-timeout: 30000
 
   jpa:

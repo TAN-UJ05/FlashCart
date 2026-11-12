@@ -11,6 +11,8 @@ spring:
         enabled: ${REDIS_SSL:false}
 
   kafka:
+    admin:
+      auto-create: ${KAFKA_ENABLED:true}
     listener:
       auto-startup: ${KAFKA_ENABLED:true}
 

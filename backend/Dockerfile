@@ -11,7 +11,8 @@ RUN addgroup -S flashcart && adduser -S flashcart -G flashcart
 COPY --from=builder /app/target/*.jar app.jar
 RUN mkdir -p /app/uploads && chown -R flashcart:flashcart /app
 USER flashcart
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=65.0 -XX:+UseSerialGC"
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD wget -q -O - http://localhost:8080/actuator/health || exit 1
+  CMD sh -c 'wget -q -O - http://localhost:${PORT:-8080}/actuator/health || exit 1'
 ENTRYPOINT ["java", "-jar", "app.jar"]
