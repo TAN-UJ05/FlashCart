@@ -1,13 +1,5 @@
 # FlashCart
 
-[![Java](https://img.shields.io/badge/Java-21%20(%2D%2Drelease%2021)-orange.svg)](https://openjdk.org/projects/jdk/21/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![React](https://img.shields.io/badge/React-TypeScript%20%2B%20Vite-blue.svg)](https://react.dev/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791.svg)](https://www.postgresql.org/)
-[![Redis](https://img.shields.io/badge/Redis-7-red.svg)](https://redis.io/)
-[![Kafka](https://img.shields.io/badge/Apache%20Kafka-3.7-231F20.svg)](https://kafka.apache.org/)
-[![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF.svg)](./.github/workflows/ci.yml)
-
 **FlashCart** is a production-oriented, full-stack e-commerce platform engineered to solve high-concurrency inventory reservation, zero-oversell flash sales, idempotent payment processing, and reliable event-driven messaging.
 
 ---
