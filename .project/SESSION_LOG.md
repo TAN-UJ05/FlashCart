@@ -29,3 +29,20 @@
 - **Backend (`mvn test -o -f backend/pom.xml "-Dspring.profiles.active=test"`)**: **`46/46 PASS` (`02:49 min`)** with real PostgreSQL 16, Redis 7, and Kafka 7.6 Testcontainers (including 3 new regression tests).
 - **Frontend**: `oxlint` **`0` errors**; Vitest **`5 files / 13 tests PASS`** (`search-input.test.tsx` added); `tsc -b && vite build` **PASS**.
 - **Live Docker Stack (`docker-compose`)**: Rebuilt `flashcart-backend:latest` and `flashcart-frontend:latest`; Playwright E2E **`2/2 PASS (23.0s)`** and full interactive browser audits passed with **`0` console/page/HTTP errors**.
+
+
+## Session 2026-11-12 (Part 2) — Frontend Visual Redesign, Admin Role Separation & Verification
+
+### Changes Implemented
+1. **Admin Purchasing Separation (Backend RBAC + Service Defense + Frontend Guardrails)**:
+   - Added `@PreAuthorize("hasRole('CUSTOMER')")` on `CartController`, `OrderController.checkout` & `getMyOrders`, `PaymentController.initiatePayment` & `handleCallback`, `FlashSaleController.purchase`, and `UserController` customer address endpoints; added service-layer `AccessDeniedException` checks in `OrderService`, `FlashSaleService`, and `PaymentService`.
+   - Kept `GET /api/v1/orders/{id}`, order cancellation, `GET /api/v1/payments/order/{orderId}`, and `POST /api/v1/payments/{id}/refund` open to `ADMIN` + owner `CUSTOMER` so admin order management remains functional.
+   - Updated frontend `useCart` (disabled for `ADMIN`), `<CustomerRoute>` guard redirecting `ADMIN` to `/admin` on `/cart`, `/checkout`, `/orders`, `/payment-result`, `Header` (hides Cart/Customer Orders), `ProfilePage` (hides Saved Addresses), and replaced buy CTAs on `ProductCard`, `ProductDetailPage`, and `FlashSaleCard`/`FlashSalePage` with `Manage` / `Edit Product` / `Manage Campaign` management actions for admins.
+2. **Complete UI/UX & Typography Overhaul**:
+   - Introduced `Space Grotesk`, `Plus Jakarta Sans`, and `JetBrains Mono` fonts (`index.html`, `tailwind.config.js`, `index.css`), unified Obsidian (`#0B1120`) + Electric Indigo (`#4F46E5`) + Amber (`#F59E0B`) + Slate/Alabaster surface palette, glassmorphic header, dark obsidian admin sidebar rail, smooth CSS entrance/hover transitions, and upgraded Recharts visualizations.
+   - Removed generic placeholder/cliché footer & hero copy and redesigned `/payment-result` into a **Secure Sandbox Checkout** terminal (`UPI`, `Card`, `NetBanking` tabs alongside deterministic sandbox test outcomes).
+
+### Verification Summary
+- **Backend (`mvn test -o -f backend/pom.xml "-Dspring.profiles.active=test"`)**: **`47/47 PASS`** (new `AuthIntegrationTest.adminCannotUseCustomerPurchasingEndpoints_returnsForbidden` verified `403 Forbidden` across all purchasing endpoints).
+- **Frontend**: `oxlint` **`0` errors**; Vitest **`14/14 PASS`** (added admin `Manage` assertion in `product.test.tsx`); `tsc -b && vite build` **PASS**.
+- **Live Docker Stack & Browser Verification**: Rebuilt `flashcart-backend:latest` and `flashcart-frontend:latest`; Playwright E2E **`2/2 PASS (14.1s)`**; `verify_live_fixes.mjs` & `verify_live_mutations.mjs` **`0` console/page/HTTP errors**.

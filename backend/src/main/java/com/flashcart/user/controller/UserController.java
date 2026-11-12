@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,11 +43,13 @@ public class UserController {
     }
 
     @GetMapping("/addresses")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<List<AddressDto>>> getAddresses(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(ApiResponse.success(userService.getUserAddresses(user.getId())));
     }
 
     @PostMapping("/addresses")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<AddressDto>> createAddress(
             @AuthenticationPrincipal User user,
             @Valid @RequestBody AddressRequest request) {
@@ -55,6 +58,7 @@ public class UserController {
     }
 
     @PutMapping("/addresses/{id}")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<AddressDto>> updateAddress(
             @AuthenticationPrincipal User user,
             @PathVariable UUID id,
@@ -64,6 +68,7 @@ public class UserController {
     }
 
     @DeleteMapping("/addresses/{id}")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<Void>> deleteAddress(
             @AuthenticationPrincipal User user,
             @PathVariable UUID id) {

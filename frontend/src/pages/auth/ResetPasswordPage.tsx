@@ -57,17 +57,17 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="mx-auto flex min-h-[70vh] max-w-md items-center px-4 py-12">
-      <Card className="w-full">
+    <div className="mx-auto flex min-h-[70vh] max-w-md items-center px-4 py-12 animate-fade-in-up">
+      <Card className="w-full shadow-soft">
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Set new password</CardTitle>
-          <p className="mt-1 text-sm text-gray-500">
+          <CardTitle className="font-display text-xl">Set new password</CardTitle>
+          <p className="mt-1 text-sm text-slate-500">
             Choose a strong password for your FlashCart account
           </p>
         </CardHeader>
         <CardContent>
           {serverError && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700">
+            <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700">
               {serverError}
             </div>
           )}
@@ -99,7 +99,7 @@ export default function ResetPasswordPage() {
             <Button type="submit" className="w-full" isLoading={isSubmitting}>
               Reset Password
             </Button>
-            <p className="text-center text-sm text-gray-600">
+            <p className="text-center text-sm text-slate-600">
               <Link to="/login" className="font-medium text-primary-600 hover:text-primary-700">
                 Back to Sign In
               </Link>

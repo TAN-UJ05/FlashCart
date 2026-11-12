@@ -25,11 +25,11 @@ export default function OrderHistoryPage() {
   });
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Track status, view invoices, or manage active orders
+        <h1 className="font-display text-3xl font-bold tracking-tight text-slate-900">My Orders</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Track status, view order summaries, or manage active orders
         </p>
       </div>
 

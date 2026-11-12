@@ -66,13 +66,14 @@ test.describe('Customer Journey', () => {
     await expect(page).toHaveURL('/admin');
 
     // Create a product
+    const uniqueSku = `SKU-TEST-${Date.now()}`;
     await page.click('a[href="/admin/products"]');
     await page.click('[data-testid="create-product-button"]');
     await page.fill('[name="name"]', 'Test Product E2E');
-    await page.fill('[name="sku"]', `SKU-TEST-${Date.now()}`);
+    await page.fill('[name="sku"]', uniqueSku);
     await page.fill('[name="price"]', '999.99');
     await page.fill('[name="description"]', 'Test product for E2E testing');
     await page.click('[data-testid="save-product-button"]');
-    await expect(page.getByText('Test Product E2E')).toBeVisible();
+    await expect(page.getByText(uniqueSku)).toBeVisible();
   });
 });

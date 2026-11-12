@@ -181,10 +181,10 @@ export default function AdminProductFormPage() {
   }
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-3xl space-y-6 animate-fade-in">
       <Link
         to="/admin/products"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Products
@@ -215,12 +215,12 @@ export default function AdminProductFormPage() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
                 Description
               </label>
               <textarea
                 rows={4}
-                className="w-full rounded-lg border border-gray-300 px-3.5 py-2 text-sm text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
                 placeholder="Product features, specs, and details..."
                 {...register('description')}
               />
@@ -261,11 +261,11 @@ export default function AdminProductFormPage() {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
                   Category
                 </label>
                 <select
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary-500 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
                   {...register('categoryId', {
                     setValueAs: (v) => (v === '' || v === null ? null : Number(v)),
                   })}
@@ -287,11 +287,11 @@ export default function AdminProductFormPage() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
                 Upload Product Image (PNG, JPEG, WebP)
               </label>
-              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-600 hover:bg-gray-100">
-                <Upload className="h-4 w-4 text-gray-500" />
+              <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600 transition-colors hover:bg-slate-100">
+                <Upload className="h-4 w-4 text-slate-500" />
                 <span>{selectedFile ? selectedFile.name : 'Choose an image file to upload...'}</span>
                 <input
                   type="file"
@@ -304,15 +304,15 @@ export default function AdminProductFormPage() {
 
             {isEdit && existing?.images && existing.images.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs font-medium text-gray-500">Existing Images</p>
+                <p className="text-xs font-medium text-slate-500">Existing Images</p>
                 <div className="flex flex-wrap gap-3">
                   {existing.images.map((img) => (
-                    <div key={img.id} className="relative h-20 w-20 overflow-hidden rounded-lg border">
+                    <div key={img.id} className="relative h-20 w-20 overflow-hidden rounded-xl border border-slate-200">
                       <img src={img.imageUrl} alt={img.altText ?? ''} className="h-full w-full object-cover" />
                       <button
                         type="button"
                         onClick={() => deleteImageMutation.mutate(img.id)}
-                        className="absolute right-1 top-1 rounded bg-white/90 p-1 text-red-600 shadow"
+                        className="absolute right-1 top-1 rounded bg-white/95 p-1 text-rose-600 shadow"
                         title="Remove image"
                       >
                         <Trash2 className="h-3 w-3" />
@@ -323,8 +323,8 @@ export default function AdminProductFormPage() {
               </div>
             )}
 
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <input type="checkbox" {...register('active')} />
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+              <input type="checkbox" {...register('active')} className="accent-primary-600" />
               Active (visible in storefront)
             </label>
 

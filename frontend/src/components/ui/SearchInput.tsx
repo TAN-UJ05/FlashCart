@@ -70,23 +70,23 @@ export function SearchInput({
 
   return (
     <form onSubmit={handleSubmit} className={cn('relative w-full', className)}>
-      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+      <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
       <input
         type="search"
         value={innerValue}
         data-testid={testId}
         onChange={(e) => handleInputChange(e.target.value)}
         placeholder={placeholder}
-        className="h-10 w-full rounded-lg border border-gray-300 bg-white pl-9 pr-8 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+        className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-10 pr-9 text-sm text-slate-900 transition-all duration-150 placeholder:text-slate-400 hover:bg-white hover:border-slate-300 focus:border-primary-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary-500/10"
       />
       {innerValue && (
         <button
           type="button"
           onClick={handleClear}
           aria-label="Clear search"
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-slate-400 transition-colors hover:bg-slate-200/70 hover:text-slate-700"
         >
-          <X className="h-4 w-4" />
+          <X className="h-3.5 w-3.5" />
         </button>
       )}
     </form>

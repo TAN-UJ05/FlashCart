@@ -7,9 +7,10 @@ import { extractErrorMessage } from '../utils/format';
 export const CART_QUERY_KEY = ['cart'] as const;
 
 export function useCart() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, isAdmin, user } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const isCustomerSession = isAuthenticated && !isAdmin;
   const userCartKey = [...CART_QUERY_KEY, user?.id ?? 'anon'] as const;
 
   const cartQuery = useQuery({
@@ -18,12 +19,16 @@ export function useCart() {
       const res = await cartService.getCart();
       return res.data;
     },
-    enabled: isAuthenticated,
+    enabled: isCustomerSession,
   });
 
   const addItemMutation = useMutation({
-    mutationFn: ({ productId, quantity }: { productId: string; quantity?: number }) =>
-      cartService.addItem(productId, quantity ?? 1),
+    mutationFn: ({ productId, quantity }: { productId: string; quantity?: number }) => {
+      if (isAdmin) {
+        return Promise.reject(new Error('Administrator accounts cannot add products to a cart.'));
+      }
+      return cartService.addItem(productId, quantity ?? 1);
+    },
     onSuccess: (res) => {
       queryClient.setQueryData(userCartKey, res.data);
       toast({
@@ -81,15 +86,16 @@ export function useCart() {
     },
   });
 
-  const totalItems =
-    cartQuery.data?.totalItems ??
-    cartQuery.data?.items?.reduce((acc, item) => acc + item.quantity, 0) ??
-    0;
+  const totalItems = isAdmin
+    ? 0
+    : cartQuery.data?.totalItems ??
+      cartQuery.data?.items?.reduce((acc, item) => acc + item.quantity, 0) ??
+      0;
 
   return {
-    cart: cartQuery.data,
-    isLoading: cartQuery.isLoading,
-    isError: cartQuery.isError,
+    cart: isAdmin ? undefined : cartQuery.data,
+    isLoading: isAdmin ? false : cartQuery.isLoading,
+    isError: isAdmin ? false : cartQuery.isError,
     refetch: cartQuery.refetch,
     totalItems,
     addItem: addItemMutation.mutateAsync,

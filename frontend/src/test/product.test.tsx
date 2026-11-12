@@ -81,4 +81,29 @@ describe('Product Components', () => {
     renderWithRouter(<ProductGrid products={[]} />);
     expect(screen.getByText('No products found')).toBeInTheDocument();
   });
+
+  it('renders Manage button instead of Add to Cart when logged in as ADMIN', () => {
+    vi.spyOn(authStore, 'useAuth').mockReturnValue({
+      user: {
+        id: 'admin-1',
+        email: 'admin@flashcart.com',
+        firstName: 'Store',
+        lastName: 'Admin',
+        role: 'ADMIN',
+        enabled: true,
+        createdAt: '2026-01-01T00:00:00Z',
+      },
+      isLoading: false,
+      isAuthenticated: true,
+      isAdmin: true,
+      login: vi.fn(),
+      register: vi.fn(),
+      logout: vi.fn(),
+      refreshAuth: vi.fn(),
+      setUser: vi.fn(),
+    });
+    renderWithRouter(<ProductCard product={sampleProduct} />);
+    expect(screen.queryByTestId('quick-add-to-cart')).not.toBeInTheDocument();
+    expect(screen.getByTestId('admin-manage-product')).toHaveTextContent('Manage');
+  });
 });

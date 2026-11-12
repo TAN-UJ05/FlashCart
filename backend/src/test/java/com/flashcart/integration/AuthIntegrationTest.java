@@ -3,11 +3,16 @@ package com.flashcart.integration;
 import com.flashcart.auth.dto.*;
 import com.flashcart.auth.entity.PasswordResetToken;
 import com.flashcart.auth.repository.PasswordResetTokenRepository;
+import com.flashcart.cart.dto.AddToCartRequest;
 import com.flashcart.common.response.ApiResponse;
 import com.flashcart.common.response.PageResponse;
 import com.flashcart.flashsale.dto.FlashSaleDto;
 import com.flashcart.flashsale.dto.FlashSaleItemRequest;
+import com.flashcart.flashsale.dto.FlashSalePurchaseRequest;
 import com.flashcart.flashsale.dto.FlashSaleRequest;
+import com.flashcart.order.dto.CheckoutRequest;
+import com.flashcart.payment.dto.PaymentCallbackRequest;
+import com.flashcart.payment.dto.PaymentInitiateRequest;
 import com.flashcart.product.dto.ProductDto;
 import com.flashcart.product.dto.ProductRequest;
 import com.flashcart.user.dto.UserDto;
@@ -359,6 +364,90 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
                 new HttpEntity<>(adminHeaders), Void.class);
         restTemplate.exchange("/api/v1/admin/products/" + productId, HttpMethod.DELETE,
                 new HttpEntity<>(adminHeaders), Void.class);
+    }
+
+    @Test
+    void adminCannotUseCustomerPurchasingEndpoints_returnsForbidden() {
+        ResponseEntity<ApiResponse<AuthResponse>> adminLogin = restTemplate.exchange(
+                "/api/v1/auth/login",
+                HttpMethod.POST,
+                new HttpEntity<>(new LoginRequest("admin@flashcart.com", "Admin@123456")),
+                new ParameterizedTypeReference<>() {}
+        );
+        HttpHeaders adminHeaders = new HttpHeaders();
+        adminHeaders.setBearerAuth(adminLogin.getBody().getData().getAccessToken());
+
+        // Cart GET & POST blocked for ADMIN
+        assertThat(restTemplate.exchange(
+                "/api/v1/cart",
+                HttpMethod.GET,
+                new HttpEntity<>(adminHeaders),
+                new ParameterizedTypeReference<ApiResponse<Object>>() {}
+        ).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        assertThat(restTemplate.exchange(
+                "/api/v1/cart/items",
+                HttpMethod.POST,
+                new HttpEntity<>(AddToCartRequest.builder().productId(UUID.randomUUID()).quantity(1).build(), adminHeaders),
+                new ParameterizedTypeReference<ApiResponse<Object>>() {}
+        ).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        // Customer checkout & personal order list blocked for ADMIN
+        assertThat(restTemplate.exchange(
+                "/api/v1/orders",
+                HttpMethod.GET,
+                new HttpEntity<>(adminHeaders),
+                new ParameterizedTypeReference<ApiResponse<Object>>() {}
+        ).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        assertThat(restTemplate.exchange(
+                "/api/v1/orders/checkout",
+                HttpMethod.POST,
+                new HttpEntity<>(CheckoutRequest.builder()
+                        .shippingFullName("Admin")
+                        .shippingAddressLine1("1 HQ")
+                        .shippingCity("Bengaluru")
+                        .shippingState("KA")
+                        .shippingPostalCode("560001")
+                        .build(), adminHeaders),
+                new ParameterizedTypeReference<ApiResponse<Object>>() {}
+        ).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        // Flash sale purchase & customer payment initiate/callback blocked for ADMIN
+        assertThat(restTemplate.exchange(
+                "/api/v1/flash-sales/" + UUID.randomUUID() + "/purchase",
+                HttpMethod.POST,
+                new HttpEntity<>(FlashSalePurchaseRequest.builder()
+                        .productId(UUID.randomUUID())
+                        .quantity(1)
+                        .build(), adminHeaders),
+                new ParameterizedTypeReference<ApiResponse<Object>>() {}
+        ).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        assertThat(restTemplate.exchange(
+                "/api/v1/payments/initiate",
+                HttpMethod.POST,
+                new HttpEntity<>(PaymentInitiateRequest.builder().orderId(UUID.randomUUID()).build(), adminHeaders),
+                new ParameterizedTypeReference<ApiResponse<Object>>() {}
+        ).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        assertThat(restTemplate.exchange(
+                "/api/v1/payments/callback",
+                HttpMethod.POST,
+                new HttpEntity<>(PaymentCallbackRequest.builder()
+                        .paymentId(UUID.randomUUID())
+                        .outcome("SUCCEEDED")
+                        .build(), adminHeaders),
+                new ParameterizedTypeReference<ApiResponse<Object>>() {}
+        ).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        // Customer shipping addresses blocked for ADMIN
+        assertThat(restTemplate.exchange(
+                "/api/v1/users/me/addresses",
+                HttpMethod.GET,
+                new HttpEntity<>(adminHeaders),
+                new ParameterizedTypeReference<ApiResponse<Object>>() {}
+        ).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     private String extractCookieValue(String setCookieHeader, String name) {

@@ -53,11 +53,16 @@ export default function AdminProductsPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-          <p className="text-sm text-gray-500">Manage catalog items, pricing, and images</p>
+          <span className="text-xs font-semibold uppercase tracking-wider text-primary-600">
+            Catalog
+          </span>
+          <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-900">
+            Products
+          </h1>
+          <p className="text-sm text-slate-500">Manage catalog items, pricing, and images</p>
         </div>
         <Link to="/admin/products/new" data-testid="create-product-button">
           <Button>
@@ -88,48 +93,48 @@ export default function AdminProductsPage() {
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+              <thead className="border-b border-slate-200 bg-slate-50/80 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 <tr>
-                  <th className="px-4 py-3">Product</th>
-                  <th className="px-4 py-3">SKU</th>
-                  <th className="px-4 py-3">Category</th>
-                  <th className="px-4 py-3 text-right">Price</th>
-                  <th className="px-4 py-3 text-right">Available</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3.5">Product</th>
+                  <th className="px-4 py-3.5">SKU</th>
+                  <th className="px-4 py-3.5">Category</th>
+                  <th className="px-4 py-3.5 text-right">Price</th>
+                  <th className="px-4 py-3.5 text-right">Available</th>
+                  <th className="px-4 py-3.5">Status</th>
+                  <th className="px-4 py-3.5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-slate-100">
                 {productsQuery.isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={7} />)
                 ) : (productsQuery.data?.content ?? []).length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
                       No products found.
                     </td>
                   </tr>
                 ) : (
                   (productsQuery.data?.content ?? []).map((p) => (
-                    <tr key={p.id} className="hover:bg-gray-50/50">
+                    <tr key={p.id} className="transition-colors hover:bg-slate-50/80">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <img
                             src={getPrimaryImageUrl(p.images)}
                             alt={p.name}
-                            className="h-10 w-10 rounded-lg object-cover bg-gray-100"
+                            className="h-10 w-10 rounded-lg object-cover bg-slate-100 ring-1 ring-slate-200/70"
                           />
-                          <span className="font-medium text-gray-900">{p.name}</span>
+                          <span className="font-medium text-slate-900">{p.name}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs text-gray-600">{p.sku}</td>
-                      <td className="px-4 py-3 text-gray-600">{p.categoryName || '-'}</td>
-                      <td className="px-4 py-3 text-right font-semibold">
+                      <td className="px-4 py-3 font-mono text-xs text-slate-600">{p.sku}</td>
+                      <td className="px-4 py-3 text-slate-600">{p.categoryName || '-'}</td>
+                      <td className="px-4 py-3 text-right font-semibold tabular-nums text-slate-900">
                         {formatCurrency(p.price)}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-right tabular-nums">
                         <span
                           className={
-                            p.availableStock <= 5 ? 'font-semibold text-red-600' : 'text-gray-700'
+                            p.availableStock <= 5 ? 'font-semibold text-rose-600' : 'text-slate-700'
                           }
                         >
                           {p.availableStock}
@@ -144,7 +149,7 @@ export default function AdminProductsPage() {
                         <div className="inline-flex items-center gap-1">
                           <Link
                             to={`/admin/products/${p.id}/edit`}
-                            className="rounded p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                            className="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
                             title="Edit"
                           >
                             <Edit2 className="h-4 w-4" />
@@ -152,7 +157,7 @@ export default function AdminProductsPage() {
                           <button
                             type="button"
                             onClick={() => setDeleteTarget(p)}
-                            className="rounded p-1.5 text-red-500 hover:bg-red-50"
+                            className="rounded-lg p-1.5 text-rose-500 transition-colors hover:bg-rose-50"
                             title="Deactivate"
                           >
                             <Trash2 className="h-4 w-4" />

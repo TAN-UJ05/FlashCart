@@ -46,10 +46,15 @@ export default function AdminCustomersPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
-        <p className="text-sm text-gray-500">View registered customer accounts and status</p>
+        <span className="text-xs font-semibold uppercase tracking-wider text-primary-600">
+          Directory
+        </span>
+        <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-900">
+          Customers
+        </h1>
+        <p className="text-sm text-slate-500">View registered customer accounts and status</p>
       </div>
 
       <div className="max-w-sm">
@@ -70,34 +75,34 @@ export default function AdminCustomersPage() {
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+              <thead className="border-b border-slate-200 bg-slate-50/80 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 <tr>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Email</th>
-                  <th className="px-4 py-3">Phone</th>
-                  <th className="px-4 py-3">Joined</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Action</th>
+                  <th className="px-4 py-3.5">Name</th>
+                  <th className="px-4 py-3.5">Email</th>
+                  <th className="px-4 py-3.5">Phone</th>
+                  <th className="px-4 py-3.5">Joined</th>
+                  <th className="px-4 py-3.5">Status</th>
+                  <th className="px-4 py-3.5 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-slate-100">
                 {customersQuery.isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={6} />)
                 ) : (customersQuery.data?.content ?? []).length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
                       No customers found.
                     </td>
                   </tr>
                 ) : (
                   (customersQuery.data?.content ?? []).map((cust) => (
-                    <tr key={cust.id}>
-                      <td className="px-4 py-3 font-medium text-gray-900">
+                    <tr key={cust.id} className="transition-colors hover:bg-slate-50/80">
+                      <td className="px-4 py-3 font-medium text-slate-900">
                         {cust.firstName} {cust.lastName ?? ''}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">{cust.email}</td>
-                      <td className="px-4 py-3 text-gray-600">{cust.phone || '-'}</td>
-                      <td className="px-4 py-3 text-gray-500">{formatDate(cust.createdAt)}</td>
+                      <td className="px-4 py-3 text-slate-600">{cust.email}</td>
+                      <td className="px-4 py-3 text-slate-600">{cust.phone || '-'}</td>
+                      <td className="px-4 py-3 text-slate-500">{formatDate(cust.createdAt)}</td>
                       <td className="px-4 py-3">
                         <Badge variant={cust.enabled ? 'success' : 'danger'}>
                           {cust.enabled ? 'Active' : 'Disabled'}

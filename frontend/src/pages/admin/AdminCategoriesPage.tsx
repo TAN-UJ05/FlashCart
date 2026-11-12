@@ -101,11 +101,16 @@ export default function AdminCategoriesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
-          <p className="text-sm text-gray-500">Organize catalog taxonomy and display order</p>
+          <span className="text-xs font-semibold uppercase tracking-wider text-primary-600">
+            Taxonomy
+          </span>
+          <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-900">
+            Categories
+          </h1>
+          <p className="text-sm text-slate-500">Organize catalog taxonomy and display order</p>
         </div>
         <Button onClick={openCreate}>
           <Plus className="h-4 w-4" />
@@ -118,24 +123,24 @@ export default function AdminCategoriesPage() {
       ) : (
         <Card className="overflow-hidden">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+            <thead className="border-b border-slate-200 bg-slate-50/80 text-xs font-semibold uppercase tracking-wider text-slate-500">
               <tr>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Slug</th>
-                <th className="px-4 py-3">Sort</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+                <th className="px-4 py-3.5">Name</th>
+                <th className="px-4 py-3.5">Slug</th>
+                <th className="px-4 py-3.5">Sort</th>
+                <th className="px-4 py-3.5">Status</th>
+                <th className="px-4 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-slate-100">
               {categoriesQuery.isLoading ? (
                 Array.from({ length: 4 }).map((_, i) => <TableRowSkeleton key={i} cols={5} />)
               ) : (
                 (categoriesQuery.data ?? []).map((cat) => (
-                  <tr key={cat.id}>
-                    <td className="px-4 py-3 font-medium text-gray-900">{cat.name}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-gray-500">{cat.slug}</td>
-                    <td className="px-4 py-3 text-gray-600">{cat.sortOrder}</td>
+                  <tr key={cat.id} className="transition-colors hover:bg-slate-50/80">
+                    <td className="px-4 py-3 font-medium text-slate-900">{cat.name}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-slate-500">{cat.slug}</td>
+                    <td className="px-4 py-3 tabular-nums text-slate-600">{cat.sortOrder}</td>
                     <td className="px-4 py-3">
                       <Badge variant={cat.active ? 'success' : 'default'}>
                         {cat.active ? 'Active' : 'Inactive'}
@@ -146,14 +151,14 @@ export default function AdminCategoriesPage() {
                         <button
                           type="button"
                           onClick={() => openEdit(cat)}
-                          className="rounded p-1.5 text-gray-500 hover:bg-gray-100"
+                          className="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
                         >
                           <Edit2 className="h-4 w-4" />
                         </button>
                         <button
                           type="button"
                           onClick={() => deleteMutation.mutate(cat.id)}
-                          className="rounded p-1.5 text-red-500 hover:bg-red-50"
+                          className="rounded-lg p-1.5 text-rose-500 transition-colors hover:bg-rose-50"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -196,8 +201,8 @@ export default function AdminCategoriesPage() {
                 v === '' || v === null || v === undefined ? undefined : Number(v),
             })}
           />
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" {...register('active')} />
+          <label className="flex items-center gap-2 text-sm text-slate-700">
+            <input type="checkbox" {...register('active')} className="accent-primary-600" />
             Active
           </label>
           <div className="flex justify-end gap-2 pt-2">

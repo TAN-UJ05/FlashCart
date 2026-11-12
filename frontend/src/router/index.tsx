@@ -43,6 +43,19 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+function CustomerRoute({ children }: { children: ReactNode }) {
+  const { isAuthenticated, isAdmin, isLoading } = useAuth();
+  const location = useLocation();
+  if (isLoading) return <PageLoader />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  if (isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
+  return <>{children}</>;
+}
+
 function AdminRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isAdmin, isLoading } = useAuth();
   const location = useLocation();
@@ -74,25 +87,25 @@ const router = createBrowserRouter([
       {
         path: 'cart',
         element: (
-          <ProtectedRoute>
+          <CustomerRoute>
             <CartPage />
-          </ProtectedRoute>
+          </CustomerRoute>
         ),
       },
       {
         path: 'checkout',
         element: (
-          <ProtectedRoute>
+          <CustomerRoute>
             <CheckoutPage />
-          </ProtectedRoute>
+          </CustomerRoute>
         ),
       },
       {
         path: 'orders',
         element: (
-          <ProtectedRoute>
+          <CustomerRoute>
             <OrderHistoryPage />
-          </ProtectedRoute>
+          </CustomerRoute>
         ),
       },
       {
@@ -106,9 +119,9 @@ const router = createBrowserRouter([
       {
         path: 'payment-result',
         element: (
-          <ProtectedRoute>
+          <CustomerRoute>
             <PaymentResultPage />
-          </ProtectedRoute>
+          </CustomerRoute>
         ),
       },
       {

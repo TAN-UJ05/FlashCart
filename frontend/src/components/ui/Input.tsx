@@ -18,14 +18,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="mb-1.5 block text-sm font-medium text-gray-700"
+            className="mb-1.5 block text-sm font-medium text-slate-700"
           >
             {label}
           </label>
         )}
         <div className="relative">
           {leftIcon && (
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
               {leftIcon}
             </div>
           )}
@@ -33,22 +33,22 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             id={inputId}
             className={cn(
-              'block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500',
+              'block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition-all duration-150 placeholder:text-slate-400 hover:border-slate-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500',
               leftIcon ? 'pl-10' : '',
               rightIcon ? 'pr-10' : '',
-              error ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : '',
+              error ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/15' : '',
               className
             )}
             {...props}
           />
           {rightIcon && (
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400">
               {rightIcon}
             </div>
           )}
         </div>
-        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-        {!error && helperText && <p className="mt-1 text-xs text-gray-500">{helperText}</p>}
+        {error && <p className="mt-1.5 text-xs font-medium text-rose-600">{error}</p>}
+        {!error && helperText && <p className="mt-1.5 text-xs text-slate-500">{helperText}</p>}
       </div>
     );
   }

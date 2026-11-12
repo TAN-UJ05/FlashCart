@@ -4,10 +4,10 @@ import { useToast, type ToastVariant } from '../../stores/toast.store';
 import { cn } from '../../utils/cn';
 
 const variantStyles: Record<ToastVariant, string> = {
-  success: 'border-emerald-200 bg-emerald-50 text-emerald-900',
-  error: 'border-red-200 bg-red-50 text-red-900',
-  warning: 'border-amber-200 bg-amber-50 text-amber-900',
-  info: 'border-blue-200 bg-blue-50 text-blue-900',
+  success: 'border-emerald-200/90 bg-white text-slate-900 shadow-elevated [&>svg]:text-emerald-600',
+  error: 'border-rose-200/90 bg-white text-slate-900 shadow-elevated [&>svg]:text-rose-600',
+  warning: 'border-amber-200/90 bg-white text-slate-900 shadow-elevated [&>svg]:text-amber-600',
+  info: 'border-sky-200/90 bg-white text-slate-900 shadow-elevated [&>svg]:text-sky-600',
 };
 
 const variantIcons: Record<ToastVariant, typeof CheckCircle2> = {
@@ -32,7 +32,7 @@ export function Toaster() {
               if (!open) dismiss(item.id);
             }}
             className={cn(
-              'flex items-start gap-3 rounded-xl border p-4 shadow-lg transition-all',
+              'flex items-start gap-3 rounded-2xl border p-4 backdrop-blur-lg transition-all animate-fade-in-up',
               variantStyles[item.variant]
             )}
           >
@@ -42,7 +42,7 @@ export function Toaster() {
                 {item.title}
               </ToastPrimitive.Title>
               {item.description && (
-                <ToastPrimitive.Description className="mt-0.5 text-xs opacity-90">
+                <ToastPrimitive.Description className="mt-0.5 text-xs text-slate-500">
                   {item.description}
                 </ToastPrimitive.Description>
               )}
@@ -50,7 +50,7 @@ export function Toaster() {
             <ToastPrimitive.Close
               aria-label="Close"
               onClick={() => dismiss(item.id)}
-              className="rounded p-0.5 opacity-60 hover:opacity-100"
+              className="rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
             >
               <X className="h-4 w-4" />
             </ToastPrimitive.Close>

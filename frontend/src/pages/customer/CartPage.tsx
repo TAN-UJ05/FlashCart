@@ -28,10 +28,10 @@ export default function CartPage() {
         <Skeleton className="h-9 w-48" />
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-4">
-            <Skeleton className="h-32 w-full rounded-xl" />
-            <Skeleton className="h-32 w-full rounded-xl" />
+            <Skeleton className="h-32 w-full rounded-2xl" />
+            <Skeleton className="h-32 w-full rounded-2xl" />
           </div>
-          <Skeleton className="h-64 w-full rounded-xl" />
+          <Skeleton className="h-64 w-full rounded-2xl" />
         </div>
       </div>
     );
@@ -48,12 +48,12 @@ export default function CartPage() {
   const items = cart?.items ?? [];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 animate-fade-in">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Review your items before proceeding to checkout
+          <h1 className="font-display text-3xl font-bold text-slate-900">Shopping Bag</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Review quantities and pricing before checkout
           </p>
         </div>
         {items.length > 0 && (
@@ -61,22 +61,22 @@ export default function CartPage() {
             variant="ghost"
             size="sm"
             onClick={() => clearCart()}
-            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+            className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
           >
             <Trash2 className="h-4 w-4" />
-            Clear Cart
+            Clear Bag
           </Button>
         )}
       </div>
 
       {items.length === 0 ? (
         <EmptyState
-          icon={<ShoppingBag className="h-6 w-6 text-gray-500" />}
-          title="Your cart is empty"
-          description="Looks like you haven't added anything to your cart yet."
+          icon={<ShoppingBag className="h-6 w-6 text-slate-500" />}
+          title="Your shopping bag is empty"
+          description="Looks like you haven't added anything yet."
           action={
             <Link to="/products">
-              <Button>Start Shopping</Button>
+              <Button>Browse Catalog</Button>
             </Link>
           }
         />

@@ -143,12 +143,17 @@ export default function AdminFlashSalesPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Flash Sales</h1>
-          <p className="text-sm text-gray-500">
-            Configure high-concurrency campaigns and per-SKU sale stock caps
+          <span className="text-xs font-semibold uppercase tracking-wider text-primary-600">
+            Campaigns
+          </span>
+          <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-900">
+            Flash Drops
+          </h1>
+          <p className="text-sm text-slate-500">
+            Schedule limited-time drops, promotional pricing, and campaign stock allocations
           </p>
         </div>
         <Button onClick={openCreateModal}>
@@ -163,44 +168,44 @@ export default function AdminFlashSalesPage() {
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+              <thead className="border-b border-slate-200 bg-slate-50/80 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 <tr>
-                  <th className="px-4 py-3">Campaign</th>
-                  <th className="px-4 py-3">Window</th>
-                  <th className="px-4 py-3">Items &amp; Stats</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3.5">Campaign</th>
+                  <th className="px-4 py-3.5">Window</th>
+                  <th className="px-4 py-3.5">Items &amp; Stats</th>
+                  <th className="px-4 py-3.5">Status</th>
+                  <th className="px-4 py-3.5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-slate-100">
                 {salesQuery.isLoading ? (
                   Array.from({ length: 3 }).map((_, i) => <TableRowSkeleton key={i} cols={5} />)
                 ) : (salesQuery.data ?? []).length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
                       No flash sales configured.
                     </td>
                   </tr>
                 ) : (
                   (salesQuery.data ?? []).map((sale) => (
-                    <tr key={sale.id}>
+                    <tr key={sale.id} className="transition-colors hover:bg-slate-50/80">
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-2 font-semibold text-gray-900">
-                          <Zap className="h-4 w-4 text-primary-600" />
+                        <div className="flex items-center gap-2 font-semibold text-slate-900">
+                          <Zap className="h-4 w-4 text-flash-500" />
                           {sale.name}
                         </div>
                         {sale.description && (
-                          <p className="text-xs text-gray-500">{sale.description}</p>
+                          <p className="text-xs text-slate-500">{sale.description}</p>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-600">
+                      <td className="px-4 py-3 text-xs text-slate-600 tabular-nums">
                         <div>Start: {formatDateTime(sale.startTime)}</div>
                         <div>End: {formatDateTime(sale.endTime)}</div>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="space-y-1 text-xs">
+                        <div className="space-y-1 text-xs tabular-nums">
                           {sale.items.map((item) => (
-                            <div key={item.id} className="text-gray-700">
+                            <div key={item.id} className="text-slate-700">
                               {item.productName}: <strong>{formatCurrency(item.salePrice)}</strong> ({item.soldCount}/{item.saleStock} sold)
                             </div>
                           ))}
@@ -216,7 +221,7 @@ export default function AdminFlashSalesPage() {
                           <button
                             type="button"
                             onClick={() => deactivateMutation.mutate(sale.id)}
-                            className="rounded p-1.5 text-red-500 hover:bg-red-50"
+                            className="rounded-lg p-1.5 text-rose-500 transition-colors hover:bg-rose-50"
                             title="Deactivate"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -268,7 +273,7 @@ export default function AdminFlashSalesPage() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">Sale Items</span>
+              <span className="text-sm font-medium text-slate-700">Sale Items</span>
               <Button
                 size="sm"
                 variant="outline"
@@ -291,7 +296,7 @@ export default function AdminFlashSalesPage() {
                     next[idx] = { ...next[idx], productId: e.target.value };
                     setItems(next);
                   }}
-                  className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:outline-none"
                 >
                   <option value="">Select product...</option>
                   {(productsQuery.data ?? []).map((p) => (

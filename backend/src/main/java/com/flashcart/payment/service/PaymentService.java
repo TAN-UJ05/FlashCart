@@ -20,6 +20,7 @@ import com.flashcart.payment.entity.Payment;
 import com.flashcart.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +44,9 @@ public class PaymentService {
 
     @Transactional
     public PaymentDto initiatePayment(User user, PaymentInitiateRequest request, String headerIdempotencyKey) {
+        if (user.getRole() == UserRole.ADMIN) {
+            throw new AccessDeniedException("Administrators cannot initiate customer payments");
+        }
         String rawIdempotencyKey = IdempotencyKeyUtils.resolveRawKey(
                 headerIdempotencyKey, request.getIdempotencyKey());
         String idempotencyKey = rawIdempotencyKey != null
@@ -102,13 +106,15 @@ public class PaymentService {
 
     @Transactional
     public PaymentDto handleCallback(User currentUser, PaymentCallbackRequest request) {
+        if (currentUser.getRole() == UserRole.ADMIN) {
+            throw new AccessDeniedException("Administrators cannot complete customer payments");
+        }
         Payment payment = findAndLockPayment(request);
         UUID orderId = payment.getOrder().getId();
         Order order = orderRepository.findByIdForUpdate(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order", orderId.toString()));
 
-        boolean isAdmin = currentUser.getRole() == UserRole.ADMIN;
-        if (!isAdmin && !order.getUser().getId().equals(currentUser.getId())) {
+        if (!order.getUser().getId().equals(currentUser.getId())) {
             throw new UnauthorizedException("You do not have permission to update this payment");
         }
 

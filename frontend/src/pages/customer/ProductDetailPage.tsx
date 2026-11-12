@@ -1,7 +1,17 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Minus, Plus, ShoppingCart, Zap, CheckCircle2, AlertCircle } from 'lucide-react';
+import {
+  ArrowLeft,
+  Minus,
+  Plus,
+  ShoppingCart,
+  Zap,
+  CheckCircle2,
+  AlertCircle,
+  Shield,
+  SlidersHorizontal,
+} from 'lucide-react';
 import * as productService from '../../services/product.service';
 import { useAuth } from '../../stores/auth.store';
 import { useCart } from '../../hooks/useCart';
@@ -15,7 +25,7 @@ import { Skeleton } from '../../components/ui/Skeleton';
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAdmin } = useAuth();
   const { addItem, isAdding } = useCart();
 
   const [selectedImageIdx, setSelectedImageIdx] = useState(0);
@@ -95,20 +105,20 @@ export default function ProductDetailPage() {
       <div>
         <Link
           to="/products"
-          className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900"
+          className="mb-6 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Products
+          Back to Catalog
         </Link>
 
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
           {/* Images */}
-          <div className="space-y-4">
-            <div className="aspect-square overflow-hidden rounded-2xl border border-gray-200 bg-white">
+          <div className="space-y-4 animate-fade-in">
+            <div className="aspect-square overflow-hidden rounded-3xl border border-slate-200/85 bg-white shadow-soft">
               <img
                 src={currentImage.imageUrl}
                 alt={currentImage.altText ?? product.name}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover transition-transform duration-500 hover:scale-[1.03]"
               />
             </div>
             {images.length > 1 && (
@@ -118,8 +128,10 @@ export default function ProductDetailPage() {
                     key={img.id}
                     type="button"
                     onClick={() => setSelectedImageIdx(idx)}
-                    className={`h-20 w-20 shrink-0 overflow-hidden rounded-lg border-2 ${
-                      idx === selectedImageIdx ? 'border-primary-600' : 'border-gray-200'
+                    className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
+                      idx === selectedImageIdx
+                        ? 'border-primary-600 ring-2 ring-primary-500/20'
+                        : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
                     <img
@@ -134,31 +146,33 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Info */}
-          <div className="flex flex-col">
+          <div className="flex flex-col animate-fade-in-up">
             {product.categoryName && (
               <Link
                 to={product.categorySlug ? `/categories/${product.categorySlug}` : '/products'}
-                className="text-sm font-semibold uppercase tracking-wider text-primary-600 hover:text-primary-700"
+                className="text-xs font-bold uppercase tracking-wider text-primary-600 hover:text-primary-700"
               >
                 {product.categoryName}
               </Link>
             )}
-            <h1 className="mt-2 text-3xl font-bold text-gray-900">{product.name}</h1>
-            <p className="mt-1 text-sm text-gray-500">SKU: {product.sku}</p>
+            <h1 className="mt-2 font-display text-3xl font-bold text-slate-900 sm:text-4xl">
+              {product.name}
+            </h1>
+            <p className="mt-1.5 font-mono text-xs text-slate-400">SKU: {product.sku}</p>
 
-            <div className="mt-6 flex items-baseline gap-3">
-              <span className="text-3xl font-extrabold text-gray-900">
+            <div className="mt-6 flex flex-wrap items-baseline gap-3">
+              <span className="text-3xl font-extrabold tabular-nums text-slate-900">
                 {formatCurrency(effectivePrice)}
               </span>
               {originalPrice && originalPrice > effectivePrice && (
-                <span className="text-lg text-gray-400 line-through">
+                <span className="text-lg tabular-nums text-slate-400 line-through">
                   {formatCurrency(originalPrice)}
                 </span>
               )}
               {product.activeFlashSalePrice != null && (
-                <Badge variant="primary" className="gap-1">
-                  <Zap className="h-3 w-3" />
-                  Flash Sale Active
+                <Badge className="gap-1 border-0 bg-amber-400 text-slate-950">
+                  <Zap className="h-3 w-3 fill-current" />
+                  Flash Drop Active
                 </Badge>
               )}
             </div>
@@ -177,50 +191,77 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            <div className="mt-6 border-t border-gray-200 pt-6">
-              <h2 className="text-sm font-semibold text-gray-900">Description</h2>
-              <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-gray-600">
+            <div className="mt-6 border-t border-slate-200/80 pt-6">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                Product Details
+              </h2>
+              <p className="mt-2.5 whitespace-pre-line text-sm leading-relaxed text-slate-600">
                 {product.description || 'No description available for this product.'}
               </p>
             </div>
 
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <div className="inline-flex items-center rounded-lg border border-gray-300 bg-white">
-                <button
-                  type="button"
-                  disabled={!inStock || quantity <= 1}
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="p-3 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
-                  aria-label="Decrease quantity"
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="w-12 text-center text-sm font-semibold text-gray-900">
-                  {quantity}
-                </span>
-                <button
-                  type="button"
-                  disabled={!inStock || quantity >= product.availableStock}
-                  onClick={() => setQuantity((q) => Math.min(product.availableStock, q + 1))}
-                  className="p-3 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
-                  aria-label="Increase quantity"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
+            {isAdmin ? (
+              <div className="mt-8 rounded-2xl border border-indigo-200 bg-indigo-50/70 p-5 space-y-3">
+                <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                  <Shield className="h-4 w-4 text-primary-600" />
+                  Administrator Preview Mode
+                </div>
+                <p className="text-xs leading-relaxed text-slate-600">
+                  Administrator accounts manage catalog items and stock levels rather than placing customer orders.
+                </p>
+                <div className="flex flex-wrap gap-3 pt-1">
+                  <Link to={`/admin/products/${product.id}/edit`}>
+                    <Button size="md">
+                      <SlidersHorizontal className="h-4 w-4" />
+                      Edit Product
+                    </Button>
+                  </Link>
+                  <Link to="/admin/inventory">
+                    <Button size="md" variant="outline">
+                      Adjust Inventory
+                    </Button>
+                  </Link>
+                </div>
               </div>
+            ) : (
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                <div className="inline-flex items-center rounded-xl border border-slate-200 bg-white shadow-xs">
+                  <button
+                    type="button"
+                    disabled={!inStock || quantity <= 1}
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    className="rounded-l-xl p-3.5 text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-40"
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <span className="w-12 text-center text-sm font-bold tabular-nums text-slate-900">
+                    {quantity}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={!inStock || quantity >= product.availableStock}
+                    onClick={() => setQuantity((q) => Math.min(product.availableStock, q + 1))}
+                    className="rounded-r-xl p-3.5 text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-40"
+                    aria-label="Increase quantity"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
 
-              <Button
-                size="lg"
-                className="flex-1 min-w-[200px]"
-                disabled={!inStock}
-                isLoading={isAdding}
-                onClick={handleAddToCart}
-                data-testid="add-to-cart-button"
-              >
-                <ShoppingCart className="h-5 w-5" />
-                {inStock ? 'Add to Cart' : 'Out of Stock'}
-              </Button>
-            </div>
+                <Button
+                  size="lg"
+                  className="flex-1 min-w-[200px]"
+                  disabled={!inStock}
+                  isLoading={isAdding}
+                  onClick={handleAddToCart}
+                  data-testid="add-to-cart-button"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  {inStock ? 'Add to Cart' : 'Out of Stock'}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -228,7 +269,7 @@ export default function ProductDetailPage() {
       {/* Related Products */}
       {relatedQuery.data && relatedQuery.data.length > 0 && (
         <section>
-          <h2 className="mb-6 text-2xl font-bold text-gray-900">Related Products</h2>
+          <h2 className="mb-6 font-display text-2xl font-bold text-slate-900">You Might Also Like</h2>
           <ProductGrid products={relatedQuery.data} />
         </section>
       )}

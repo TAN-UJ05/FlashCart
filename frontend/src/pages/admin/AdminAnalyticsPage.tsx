@@ -59,12 +59,17 @@ export default function AdminAnalyticsPage() {
   const data = analyticsQuery.data;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics &amp; Insights</h1>
-          <p className="text-sm text-gray-500">
-            Period revenue, order volume, top products, and inventory health
+          <span className="text-xs font-semibold uppercase tracking-wider text-primary-600">
+            Performance
+          </span>
+          <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-900">
+            Analytics &amp; Insights
+          </h1>
+          <p className="text-sm text-slate-500">
+            Period revenue, order volume, top products, and stock health
           </p>
         </div>
 
@@ -86,28 +91,42 @@ export default function AdminAnalyticsPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
-            <p className="text-xs font-medium uppercase text-gray-500">Period Revenue ({days}d)</p>
-            <p className="mt-1 text-2xl font-bold text-gray-900">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Period Revenue ({days}d)
+            </p>
+            <p className="mt-1.5 font-display text-2xl font-bold text-slate-900 tabular-nums">
               {formatCurrency(data.periodRevenue)}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-xs font-medium uppercase text-gray-500">Period Orders ({days}d)</p>
-            <p className="mt-1 text-2xl font-bold text-gray-900">{data.periodOrders}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Period Orders ({days}d)
+            </p>
+            <p className="mt-1.5 font-display text-2xl font-bold text-slate-900 tabular-nums">
+              {data.periodOrders}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-xs font-medium uppercase text-gray-500">Confirmed Orders</p>
-            <p className="mt-1 text-2xl font-bold text-emerald-600">{data.confirmedOrders}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Confirmed Orders
+            </p>
+            <p className="mt-1.5 font-display text-2xl font-bold text-emerald-600 tabular-nums">
+              {data.confirmedOrders}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-xs font-medium uppercase text-gray-500">Low Stock Alerts</p>
-            <p className="mt-1 text-2xl font-bold text-red-600">{data.lowStockCount}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Low Stock Alerts
+            </p>
+            <p className="mt-1.5 font-display text-2xl font-bold text-rose-600 tabular-nums">
+              {data.lowStockCount}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -121,14 +140,14 @@ export default function AdminAnalyticsPage() {
           <CardContent className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={data.revenueByDay ?? []}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#64748b' }} />
+                <YAxis tick={{ fontSize: 12, fill: '#64748b' }} />
                 <Tooltip formatter={(val) => formatCurrency(Number(val ?? 0))} />
                 <Line
                   type="monotone"
                   dataKey="revenue"
-                  stroke="#ea580c"
+                  stroke="#4f46e5"
                   strokeWidth={2.5}
                   dot={false}
                 />
@@ -144,11 +163,11 @@ export default function AdminAnalyticsPage() {
           <CardContent className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.revenueByDay ?? []}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#64748b' }} />
+                <YAxis tick={{ fontSize: 12, fill: '#64748b' }} />
                 <Tooltip />
-                <Bar dataKey="orders" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="orders" fill="#6366f1" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -161,17 +180,22 @@ export default function AdminAnalyticsPage() {
         </CardHeader>
         <CardContent className="h-80">
           {!data.topProducts || data.topProducts.length === 0 ? (
-            <div className="flex h-full items-center justify-center text-sm text-gray-500">
+            <div className="flex h-full items-center justify-center text-sm text-slate-500">
               No sales data available for this period yet.
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.topProducts} layout="vertical" margin={{ left: 40 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis type="number" tick={{ fontSize: 12 }} />
-                <YAxis type="category" dataKey="productName" width={150} tick={{ fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis type="number" tick={{ fontSize: 12, fill: '#64748b' }} />
+                <YAxis
+                  type="category"
+                  dataKey="productName"
+                  width={150}
+                  tick={{ fontSize: 12, fill: '#334155' }}
+                />
                 <Tooltip />
-                <Bar dataKey="unitsSold" fill="#f97316" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="unitsSold" fill="#f59e0b" radius={[0, 6, 6, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}

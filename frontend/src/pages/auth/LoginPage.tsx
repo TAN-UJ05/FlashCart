@@ -62,20 +62,20 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="mx-auto flex min-h-[75vh] max-w-md items-center px-4 py-12">
-      <Card className="w-full">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-primary-600 text-white">
-            <Zap className="h-6 w-6" />
+    <div className="relative flex min-h-[78vh] items-center justify-center px-4 py-12 bg-grid-pattern">
+      <Card className="w-full max-w-md animate-scale-in">
+        <CardHeader className="text-center pb-5">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-600 to-indigo-700 text-white shadow-md shadow-primary-600/20">
+            <Zap className="h-6 w-6 fill-current" />
           </div>
-          <CardTitle className="text-xl">Sign in to FlashCart</CardTitle>
-          <p className="mt-1 text-sm text-gray-500">
-            Access your orders, cart, and exclusive flash deals
+          <CardTitle className="font-display text-2xl">Sign in to FlashCart</CardTitle>
+          <p className="mt-1 text-sm text-slate-500">
+            Access your account, orders, and saved preferences
           </p>
         </CardHeader>
         <CardContent>
           {serverError && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700">
+            <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-sm font-medium text-rose-700">
               {serverError}
             </div>
           )}
@@ -102,7 +102,7 @@ export default function LoginPage() {
             <div className="flex items-center justify-end">
               <Link
                 to="/forgot-password"
-                className="text-xs font-medium text-primary-600 hover:text-primary-700"
+                className="text-xs font-semibold text-primary-600 hover:text-primary-700"
               >
                 Forgot password?
               </Link>
@@ -113,7 +113,7 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-gray-600">
+          <p className="mt-6 text-center text-sm text-slate-600">
             Don&apos;t have an account?{' '}
             <Link to="/register" className="font-semibold text-primary-600 hover:text-primary-700">
               Create one

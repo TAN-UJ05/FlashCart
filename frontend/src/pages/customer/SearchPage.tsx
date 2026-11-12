@@ -29,15 +29,18 @@ export default function SearchPage() {
   return (
     <div
       data-testid="search-results"
-      className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6"
+      className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6 animate-fade-in"
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Search Results</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="font-display text-3xl font-bold tracking-tight text-slate-900">
+            Search Catalog
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
             {query ? (
               <>
-                Showing results for <span className="font-semibold text-gray-900">&ldquo;{query}&rdquo;</span>
+                Showing results for{' '}
+                <span className="font-semibold text-slate-900">&ldquo;{query}&rdquo;</span>
               </>
             ) : (
               'Enter a keyword to search products'

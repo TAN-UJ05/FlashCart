@@ -102,22 +102,24 @@ export default function OrderDetailPage() {
   const backTarget = isAdmin && !isOwner ? '/admin/orders' : '/orders';
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-6 animate-fade-in">
       <Link
         to={backTarget}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Orders
       </Link>
 
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900">{order.orderNumber}</h1>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
+              {order.orderNumber}
+            </h1>
             <OrderStatusBadge status={order.status} />
           </div>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-slate-500">
             Placed on {formatDateTime(order.createdAt)}
           </p>
         </div>
@@ -151,7 +153,7 @@ export default function OrderDetailPage() {
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-gray-200 text-xs uppercase text-gray-500">
+                <thead className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-500">
                   <tr>
                     <th className="pb-3">Product</th>
                     <th className="pb-3 text-right">Price</th>
@@ -159,16 +161,20 @@ export default function OrderDetailPage() {
                     <th className="pb-3 text-right">Total</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-slate-100">
                   {order.items.map((item) => (
                     <tr key={item.id}>
                       <td className="py-3">
-                        <p className="font-medium text-gray-900">{item.productName}</p>
-                        <p className="text-xs text-gray-500">SKU: {item.productSku}</p>
+                        <p className="font-medium text-slate-900">{item.productName}</p>
+                        <p className="font-mono text-xs text-slate-500">SKU: {item.productSku}</p>
                       </td>
-                      <td className="py-3 text-right">{formatCurrency(item.unitPrice)}</td>
-                      <td className="py-3 text-right">{item.quantity}</td>
-                      <td className="py-3 text-right font-semibold">
+                      <td className="py-3 text-right tabular-nums text-slate-700">
+                        {formatCurrency(item.unitPrice)}
+                      </td>
+                      <td className="py-3 text-right tabular-nums text-slate-700">
+                        {item.quantity}
+                      </td>
+                      <td className="py-3 text-right font-semibold tabular-nums text-slate-900">
                         {formatCurrency(item.totalPrice)}
                       </td>
                     </tr>
@@ -177,20 +183,20 @@ export default function OrderDetailPage() {
               </table>
             </div>
 
-            <div className="mt-4 space-y-2 border-t border-gray-200 pt-4 text-sm">
-              <div className="flex justify-between text-gray-600">
+            <div className="mt-4 space-y-2 border-t border-slate-200 pt-4 text-sm">
+              <div className="flex justify-between text-slate-600">
                 <span>Subtotal</span>
-                <span>{formatCurrency(order.subtotal)}</span>
+                <span className="tabular-nums">{formatCurrency(order.subtotal)}</span>
               </div>
               {order.discountAmount > 0 && (
                 <div className="flex justify-between text-emerald-600">
                   <span>Discount</span>
-                  <span>-{formatCurrency(order.discountAmount)}</span>
+                  <span className="tabular-nums">-{formatCurrency(order.discountAmount)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-base font-bold text-gray-900">
+              <div className="flex justify-between text-base font-bold text-slate-900">
                 <span>Total</span>
-                <span>{formatCurrency(order.totalAmount)}</span>
+                <span className="tabular-nums">{formatCurrency(order.totalAmount)}</span>
               </div>
             </div>
           </CardContent>
@@ -204,8 +210,8 @@ export default function OrderDetailPage() {
                 Shipping Address
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-gray-600 space-y-1">
-              <p className="font-semibold text-gray-900">{order.shippingFullName || '-'}</p>
+            <CardContent className="text-sm text-slate-600 space-y-1">
+              <p className="font-semibold text-slate-900">{order.shippingFullName || '-'}</p>
               <p>{order.shippingAddressLine1}</p>
               {order.shippingAddressLine2 && <p>{order.shippingAddressLine2}</p>}
               <p>
@@ -227,7 +233,7 @@ export default function OrderDetailPage() {
               {latestPayment ? (
                 <>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Status</span>
+                    <span className="text-slate-500">Status</span>
                     <Badge
                       variant={
                         latestPayment.status === 'SUCCEEDED'
@@ -241,20 +247,22 @@ export default function OrderDetailPage() {
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Amount</span>
-                    <span className="font-semibold">{formatCurrency(latestPayment.amount)}</span>
+                    <span className="text-slate-500">Amount</span>
+                    <span className="font-semibold tabular-nums text-slate-900">
+                      {formatCurrency(latestPayment.amount)}
+                    </span>
                   </div>
                   {latestPayment.transactionId && (
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-slate-500">
                       Txn: <span className="font-mono">{latestPayment.transactionId}</span>
                     </div>
                   )}
                   {latestPayment.failureReason && (
-                    <p className="text-xs text-red-600">{latestPayment.failureReason}</p>
+                    <p className="text-xs text-rose-600">{latestPayment.failureReason}</p>
                   )}
                 </>
               ) : (
-                <p className="text-gray-500">No payment initiated yet.</p>
+                <p className="text-slate-500">No payment initiated yet.</p>
               )}
             </CardContent>
           </Card>

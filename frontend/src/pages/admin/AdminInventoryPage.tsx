@@ -65,11 +65,16 @@ export default function AdminInventoryPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Inventory Management</h1>
-        <p className="text-sm text-gray-500">
-          Monitor total, reserved, and available stock invariants across all SKUs
+        <span className="text-xs font-semibold uppercase tracking-wider text-primary-600">
+          Warehouse Control
+        </span>
+        <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-900">
+          Inventory Management
+        </h1>
+        <p className="text-sm text-slate-500">
+          Monitor total, reserved, and available stock levels across all SKUs
         </p>
       </div>
 
@@ -82,18 +87,18 @@ export default function AdminInventoryPage() {
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+              <thead className="border-b border-slate-200 bg-slate-50/80 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 <tr>
-                  <th className="px-4 py-3">Product</th>
-                  <th className="px-4 py-3">SKU</th>
-                  <th className="px-4 py-3 text-right">Total</th>
-                  <th className="px-4 py-3 text-right">Reserved</th>
-                  <th className="px-4 py-3 text-right">Available</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Action</th>
+                  <th className="px-4 py-3.5">Product</th>
+                  <th className="px-4 py-3.5">SKU</th>
+                  <th className="px-4 py-3.5 text-right">Total</th>
+                  <th className="px-4 py-3.5 text-right">Reserved</th>
+                  <th className="px-4 py-3.5 text-right">Available</th>
+                  <th className="px-4 py-3.5">Status</th>
+                  <th className="px-4 py-3.5 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-slate-100">
                 {inventoryQuery.isLoading ? (
                   Array.from({ length: 6 }).map((_, i) => <TableRowSkeleton key={i} cols={7} />)
                 ) : (
@@ -101,14 +106,21 @@ export default function AdminInventoryPage() {
                     const isOut = item.availableStock <= 0;
                     const isLow = item.availableStock > 0 && item.availableStock <= 10;
                     return (
-                      <tr key={item.id} className={isLow || isOut ? 'bg-red-50/40' : ''}>
-                        <td className="px-4 py-3 font-medium text-gray-900">{item.productName}</td>
-                        <td className="px-4 py-3 font-mono text-xs text-gray-600">{item.productSku}</td>
-                        <td className="px-4 py-3 text-right">{item.totalStock}</td>
-                        <td className="px-4 py-3 text-right text-amber-700 font-medium">
+                      <tr
+                        key={item.id}
+                        className={`transition-colors hover:bg-slate-50/80 ${
+                          isLow || isOut ? 'bg-rose-50/30' : ''
+                        }`}
+                      >
+                        <td className="px-4 py-3 font-medium text-slate-900">{item.productName}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-slate-600">{item.productSku}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                          {item.totalStock}
+                        </td>
+                        <td className="px-4 py-3 text-right font-medium tabular-nums text-amber-700">
                           {item.reservedStock}
                         </td>
-                        <td className="px-4 py-3 text-right font-bold text-gray-900">
+                        <td className="px-4 py-3 text-right font-bold tabular-nums text-slate-900">
                           {item.availableStock}
                         </td>
                         <td className="px-4 py-3">

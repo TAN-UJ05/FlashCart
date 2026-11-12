@@ -7,6 +7,8 @@ import com.flashcart.cart.repository.CartRepository;
 import com.flashcart.common.enums.NotificationType;
 import com.flashcart.common.enums.OrderStatus;
 import com.flashcart.common.enums.ReservationStatus;
+import com.flashcart.common.enums.UserRole;
+import org.springframework.security.access.AccessDeniedException;
 import com.flashcart.common.exception.InsufficientInventoryException;
 import com.flashcart.common.exception.InvalidOperationException;
 import com.flashcart.common.exception.ResourceNotFoundException;
@@ -62,6 +64,9 @@ public class OrderService {
 
     @Transactional
     public OrderDto checkout(User user, CheckoutRequest request, String headerIdempotencyKey) {
+        if (user.getRole() == UserRole.ADMIN) {
+            throw new AccessDeniedException("Administrators cannot place customer orders");
+        }
         String rawIdempotencyKey = IdempotencyKeyUtils.resolveRawKey(
                 headerIdempotencyKey, request != null ? request.getIdempotencyKey() : null);
         String scopedBaseKey = IdempotencyKeyUtils.scopeForUser(user.getId(), "chk", rawIdempotencyKey);

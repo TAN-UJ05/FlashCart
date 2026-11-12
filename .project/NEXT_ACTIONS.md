@@ -1,7 +1,7 @@
 # FlashCart — Next Actions
 
 ## Current State
-All local development, optimization, full-stack bugfixes, container orchestration, automated test suites (`46/46` backend + Testcontainers, `13/13` Vitest, `2/2` Playwright E2E, zero-error live browser audits), k6 load & 10,000-attempt flash-sale concurrency verification, observability provisioning, and engineering documentation are **complete** and recorded locally on branch `master`.
+All local development, optimization, full-stack bugfixes, UI/UX redesign (Obsidian/Indigo/Amber design system across Home, Storefront, Sandbox Checkout, and Admin Console), Admin purchasing role isolation (`403 Forbidden` backend + management-only UI), container orchestration, automated test suites (`47/47` backend + Testcontainers, `14/14` Vitest, `2/2` Playwright E2E, zero-error live browser audits), k6 load & 10,000-attempt flash-sale concurrency verification, observability provisioning, and engineering documentation are **complete** and recorded locally on branch `master`.
 
 ## Optional Next Actions (Requires User Input / Authorization)
 1. **Remote GitHub Push & CI Execution** *(Free — Requires user GitHub repo URL & permission)*

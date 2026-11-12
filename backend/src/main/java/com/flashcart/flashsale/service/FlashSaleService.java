@@ -2,6 +2,8 @@ package com.flashcart.flashsale.service;
 
 import com.flashcart.auth.entity.User;
 import com.flashcart.common.enums.OrderStatus;
+import com.flashcart.common.enums.UserRole;
+import org.springframework.security.access.AccessDeniedException;
 import com.flashcart.common.exception.FlashSaleException;
 import com.flashcart.common.exception.InsufficientInventoryException;
 import com.flashcart.common.exception.InvalidOperationException;
@@ -218,6 +220,10 @@ public class FlashSaleService {
             UUID flashSaleId,
             FlashSalePurchaseRequest request,
             String headerIdempotencyKey) {
+
+        if (user.getRole() == UserRole.ADMIN) {
+            throw new AccessDeniedException("Administrators cannot purchase flash sale items");
+        }
 
         String rawIdempotencyKey = IdempotencyKeyUtils.resolveRawKey(
                 headerIdempotencyKey, request.getIdempotencyKey());

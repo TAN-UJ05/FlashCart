@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { MapPin, Plus, Trash2, User as UserIcon, Edit2 } from 'lucide-react';
+import { MapPin, Plus, Trash2, User as UserIcon, Edit2, Shield } from 'lucide-react';
 import * as userService from '../../services/user.service';
 import type { Address } from '../../types';
 import { useAuth } from '../../stores/auth.store';
@@ -37,7 +38,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 type AddressFormValues = z.infer<typeof addressSchema>;
 
 export default function ProfilePage() {
-  const { user, setUser } = useAuth();
+  const { user, isAdmin, setUser } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -80,7 +81,7 @@ export default function ProfilePage() {
       const res = await userService.getAddresses();
       return res.data;
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !isAdmin,
   });
 
   const updateProfileMutation = useMutation({
@@ -157,10 +158,10 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-8 animate-fade-in-up">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
-        <p className="mt-1 text-sm text-gray-500">{user?.email}</p>
+        <h1 className="font-display text-3xl font-bold text-slate-900">Account Settings</h1>
+        <p className="mt-1 text-sm text-slate-500">{user?.email}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
@@ -198,126 +199,147 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-primary-600" />
-              Saved Addresses
-            </CardTitle>
-            <Button size="sm" onClick={openNewAddressModal}>
-              <Plus className="h-4 w-4" />
-              Add Address
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {(addressesQuery.data ?? []).length === 0 ? (
-              <p className="text-sm text-gray-500">No saved addresses yet.</p>
-            ) : (
-              (addressesQuery.data ?? []).map((addr) => (
-                <div
-                  key={addr.id}
-                  className="flex items-start justify-between rounded-lg border border-gray-200 p-4"
-                >
-                  <div className="text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-gray-900">{addr.fullName}</span>
-                      {addr.isDefault && <Badge variant="primary">Default</Badge>}
+        {isAdmin ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-primary-600" />
+                Administrator Workspace
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm leading-relaxed text-slate-600">
+                Your account has <strong className="text-slate-900">ADMIN</strong> permissions. Manage products, categories, flash drops, stock levels, customer accounts, and fulfillment from the admin console.
+              </p>
+              <Link to="/admin" className="inline-block">
+                <Button>Open Admin Console</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-primary-600" />
+                Saved Addresses
+              </CardTitle>
+              <Button size="sm" onClick={openNewAddressModal}>
+                <Plus className="h-4 w-4" />
+                Add Address
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(addressesQuery.data ?? []).length === 0 ? (
+                <p className="text-sm text-slate-500">No saved addresses yet.</p>
+              ) : (
+                (addressesQuery.data ?? []).map((addr) => (
+                  <div
+                    key={addr.id}
+                    className="flex items-start justify-between rounded-xl border border-slate-200/80 p-4 transition-colors hover:border-slate-300"
+                  >
+                    <div className="text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-slate-900">{addr.fullName}</span>
+                        {addr.isDefault && <Badge variant="primary">Default</Badge>}
+                      </div>
+                      <p className="mt-1 text-slate-600">{addr.addressLine1}</p>
+                      <p className="text-slate-600">
+                        {addr.city}, {addr.state} {addr.postalCode}
+                      </p>
+                      <p className="text-slate-500">{addr.country}</p>
                     </div>
-                    <p className="mt-1 text-gray-600">{addr.addressLine1}</p>
-                    <p className="text-gray-600">
-                      {addr.city}, {addr.state} {addr.postalCode}
-                    </p>
-                    <p className="text-gray-500">{addr.country}</p>
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => openEditAddressModal(addr)}
+                        className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
+                        aria-label="Edit address"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteAddressMutation.mutate(addr.id)}
+                        className="rounded-lg p-1.5 text-rose-500 hover:bg-rose-50"
+                        aria-label="Delete address"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-1">
-                    <button
-                      type="button"
-                      onClick={() => openEditAddressModal(addr)}
-                      className="rounded p-1.5 text-gray-500 hover:bg-gray-100"
-                      aria-label="Edit address"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteAddressMutation.mutate(addr.id)}
-                      className="rounded p-1.5 text-red-500 hover:bg-red-50"
-                      aria-label="Delete address"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      <Modal
-        isOpen={addressModalOpen}
-        onClose={() => setAddressModalOpen(false)}
-        title={editingAddress ? 'Edit Address' : 'Add New Address'}
-      >
-        <form
-          onSubmit={addressForm.handleSubmit((v) => saveAddressMutation.mutate(v))}
-          className="space-y-3"
+      {!isAdmin && (
+        <Modal
+          isOpen={addressModalOpen}
+          onClose={() => setAddressModalOpen(false)}
+          title={editingAddress ? 'Edit Address' : 'Add New Address'}
         >
-          <Input
-            label="Full Name"
-            error={addressForm.formState.errors.fullName?.message}
-            {...addressForm.register('fullName')}
-          />
-          <Input
-            label="Phone"
-            error={addressForm.formState.errors.phone?.message}
-            {...addressForm.register('phone')}
-          />
-          <Input
-            label="Address Line 1"
-            error={addressForm.formState.errors.addressLine1?.message}
-            {...addressForm.register('addressLine1')}
-          />
-          <Input
-            label="Address Line 2 (Optional)"
-            {...addressForm.register('addressLine2')}
-          />
-          <div className="grid grid-cols-3 gap-2">
+          <form
+            onSubmit={addressForm.handleSubmit((v) => saveAddressMutation.mutate(v))}
+            className="space-y-3"
+          >
             <Input
-              label="City"
-              error={addressForm.formState.errors.city?.message}
-              {...addressForm.register('city')}
+              label="Full Name"
+              error={addressForm.formState.errors.fullName?.message}
+              {...addressForm.register('fullName')}
             />
             <Input
-              label="State"
-              error={addressForm.formState.errors.state?.message}
-              {...addressForm.register('state')}
+              label="Phone"
+              error={addressForm.formState.errors.phone?.message}
+              {...addressForm.register('phone')}
             />
             <Input
-              label="Postal Code"
-              error={addressForm.formState.errors.postalCode?.message}
-              {...addressForm.register('postalCode')}
+              label="Address Line 1"
+              error={addressForm.formState.errors.addressLine1?.message}
+              {...addressForm.register('addressLine1')}
             />
-          </div>
-          <Input
-            label="Country"
-            error={addressForm.formState.errors.country?.message}
-            {...addressForm.register('country')}
-          />
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" {...addressForm.register('isDefault')} />
-            Set as default shipping address
-          </label>
-          <div className="flex justify-end gap-2 pt-3">
-            <Button variant="outline" onClick={() => setAddressModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" isLoading={saveAddressMutation.isPending}>
-              Save Address
-            </Button>
-          </div>
-        </form>
-      </Modal>
+            <Input
+              label="Address Line 2 (Optional)"
+              {...addressForm.register('addressLine2')}
+            />
+            <div className="grid grid-cols-3 gap-2">
+              <Input
+                label="City"
+                error={addressForm.formState.errors.city?.message}
+                {...addressForm.register('city')}
+              />
+              <Input
+                label="State"
+                error={addressForm.formState.errors.state?.message}
+                {...addressForm.register('state')}
+              />
+              <Input
+                label="Postal Code"
+                error={addressForm.formState.errors.postalCode?.message}
+                {...addressForm.register('postalCode')}
+              />
+            </div>
+            <Input
+              label="Country"
+              error={addressForm.formState.errors.country?.message}
+              {...addressForm.register('country')}
+            />
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input type="checkbox" {...addressForm.register('isDefault')} />
+              Set as default shipping address
+            </label>
+            <div className="flex justify-end gap-2 pt-3">
+              <Button variant="outline" onClick={() => setAddressModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" isLoading={saveAddressMutation.isPending}>
+                Save Address
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Zap } from 'lucide-react';
+import { Shield, Zap } from 'lucide-react';
 import * as flashSaleService from '../../services/flashsale.service';
 import * as userService from '../../services/user.service';
 import * as paymentService from '../../services/payment.service';
@@ -19,7 +19,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 
 export default function FlashSalePage() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, isAdmin, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -47,7 +47,7 @@ export default function FlashSalePage() {
       const res = await userService.getAddresses();
       return res.data;
     },
-    enabled: isAuthenticated && !!user?.id,
+    enabled: isAuthenticated && !!user?.id && !isAdmin,
   });
 
   const savedAddresses = addressesQuery.data ?? [];
@@ -57,6 +57,9 @@ export default function FlashSalePage() {
 
   const purchaseMutation = useMutation({
     mutationFn: async (item: FlashSaleItem) => {
+      if (isAdmin) {
+        throw new Error('Administrator accounts cannot place customer orders.');
+      }
       if (
         !effectiveAddressId &&
         (!shippingFullName.trim() ||
@@ -90,7 +93,7 @@ export default function FlashSalePage() {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['product'] });
       toast({
-        title: 'Flash sale item reserved!',
+        title: 'Flash drop item reserved!',
         description: `Order ${order.orderNumber} created. Complete payment to confirm.`,
         variant: 'success',
       });
@@ -110,6 +113,10 @@ export default function FlashSalePage() {
       navigate('/login');
       return;
     }
+    if (isAdmin) {
+      navigate('/admin/flash-sales');
+      return;
+    }
     const defaultAddr = savedAddresses.find((a) => a.isDefault) ?? savedAddresses[0];
     setSelectedAddressId(defaultAddr?.id ?? '');
     setShippingFullName('');
@@ -121,16 +128,32 @@ export default function FlashSalePage() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
-      <div className="rounded-2xl bg-gradient-to-r from-gray-900 via-primary-900 to-gray-900 p-8 text-white">
-        <div className="flex items-center gap-2 text-primary-300 text-sm font-semibold">
-          <Zap className="h-4 w-4" />
-          ATOMIC STOCK ENGINE
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-10">
+      <div className="relative overflow-hidden rounded-3xl bg-[#0B1120] p-8 text-white shadow-elevated">
+        <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-35" />
+        <div className="pointer-events-none absolute -top-20 right-10 h-64 w-64 rounded-full bg-amber-500/20 blur-3xl" />
+        <div className="relative flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-500/15 px-3 py-1 text-xs font-bold text-amber-300">
+              <Zap className="h-3.5 w-3.5 fill-current" />
+              Limited Quantities
+            </div>
+            <h1 className="mt-3 font-display text-3xl font-bold sm:text-4xl">Live Flash Drops</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">
+              Exclusive markdowns on select hardware and essentials. Stock counts update live as claims come in.
+            </p>
+          </div>
+          {isAdmin && (
+            <Button
+              variant="outline"
+              onClick={() => navigate('/admin/flash-sales')}
+              className="border-slate-700 bg-slate-900/80 text-white hover:bg-slate-800 hover:text-white"
+            >
+              <Shield className="h-4 w-4 text-primary-400" />
+              Manage Campaigns
+            </Button>
+          )}
         </div>
-        <h1 className="mt-2 text-3xl font-extrabold sm:text-4xl">Live Flash Sales</h1>
-        <p className="mt-2 max-w-2xl text-sm text-gray-300">
-          Limited-stock deals enforced by PostgreSQL atomic counters and idempotency keys. Grab yours before stock runs out!
-        </p>
       </div>
 
       {salesQuery.isLoading ? (
@@ -141,34 +164,35 @@ export default function FlashSalePage() {
         </div>
       ) : salesQuery.isError ? (
         <ErrorState
-          title="Could not load flash sales"
+          title="Could not load flash drops"
           onRetry={() => salesQuery.refetch()}
         />
       ) : !salesQuery.data || salesQuery.data.length === 0 ? (
         <EmptyState
           icon={<Zap className="h-6 w-6 text-primary-600" />}
-          title="No active flash sales right now"
-          description="Check back soon for upcoming limited-time lightning deals."
+          title="No active flash drops right now"
+          description="Check back soon for upcoming limited-time deals."
         />
       ) : (
-        <div className="space-y-10">
+        <div className="space-y-12">
           {salesQuery.data.map((sale) => (
-            <section key={sale.id} className="space-y-5">
-              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 pb-4">
+            <section key={sale.id} className="space-y-6">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{sale.name}</h2>
+                  <h2 className="font-display text-2xl font-bold text-slate-900">{sale.name}</h2>
                   {sale.description && (
-                    <p className="mt-1 text-sm text-gray-500">{sale.description}</p>
+                    <p className="mt-1 text-sm text-slate-500">{sale.description}</p>
                   )}
                 </div>
                 <CountdownTimer endTime={sale.endTime} />
               </div>
 
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                {sale.items.map((item) => (
+                {sale.items.map((item, idx) => (
                   <FlashSaleCard
                     key={item.id}
                     item={item}
+                    index={idx}
                     onPurchase={handleBuyClick}
                     isPurchasing={
                       purchaseMutation.isPending && selectedItem?.id === item.id
@@ -181,86 +205,88 @@ export default function FlashSalePage() {
         </div>
       )}
 
-      <Modal
-        isOpen={!!selectedItem}
-        onClose={() => setSelectedItem(null)}
-        title={`Confirm Flash Deal: ${selectedItem?.productName ?? ''}`}
-        description="Reserve 1 unit immediately and proceed to payment."
-      >
-        {selectedItem && (
-          <div className="space-y-4">
-            {savedAddresses.length > 0 && (
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                  Select Saved Address
-                </label>
-                <select
-                  value={effectiveAddressId}
-                  onChange={(e) => setSelectedAddressId(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                >
-                  <option value="">Enter a new shipping address</option>
-                  {savedAddresses.map((addr) => (
-                    <option key={addr.id} value={addr.id}>
-                      {addr.fullName} — {addr.addressLine1}, {addr.city}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {!effectiveAddressId && (
-              <div className="space-y-3">
-                <Input
-                  label="Full Name"
-                  value={shippingFullName}
-                  onChange={(e) => setShippingFullName(e.target.value)}
-                  placeholder="Recipient name"
-                />
-                <Input
-                  label="Address Line 1"
-                  value={shippingAddressLine1}
-                  onChange={(e) => setShippingAddressLine1(e.target.value)}
-                  placeholder="Street address"
-                />
-                <div className="grid grid-cols-3 gap-2">
-                  <Input
-                    label="City"
-                    value={shippingCity}
-                    onChange={(e) => setShippingCity(e.target.value)}
-                    placeholder="City"
-                  />
-                  <Input
-                    label="State"
-                    value={shippingState}
-                    onChange={(e) => setShippingState(e.target.value)}
-                    placeholder="State"
-                  />
-                  <Input
-                    label="Postal Code"
-                    value={shippingPostalCode}
-                    onChange={(e) => setShippingPostalCode(e.target.value)}
-                    placeholder="400001"
-                  />
+      {!isAdmin && (
+        <Modal
+          isOpen={!!selectedItem}
+          onClose={() => setSelectedItem(null)}
+          title={`Confirm Flash Deal: ${selectedItem?.productName ?? ''}`}
+          description="Reserve 1 unit immediately and proceed to checkout payment."
+        >
+          {selectedItem && (
+            <div className="space-y-4">
+              {savedAddresses.length > 0 && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Select Saved Address
+                  </label>
+                  <select
+                    value={effectiveAddressId}
+                    onChange={(e) => setSelectedAddressId(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"
+                  >
+                    <option value="">Enter a new shipping address</option>
+                    {savedAddresses.map((addr) => (
+                      <option key={addr.id} value={addr.id}>
+                        {addr.fullName} — {addr.addressLine1}, {addr.city}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              </div>
-            )}
+              )}
 
-            <div className="flex justify-end gap-3 pt-2">
-              <Button variant="outline" onClick={() => setSelectedItem(null)}>
-                Cancel
-              </Button>
-              <Button
-                isLoading={purchaseMutation.isPending}
-                onClick={() => purchaseMutation.mutate(selectedItem)}
-              >
-                <Zap className="h-4 w-4" />
-                Reserve &amp; Pay
-              </Button>
+              {!effectiveAddressId && (
+                <div className="space-y-3">
+                  <Input
+                    label="Full Name"
+                    value={shippingFullName}
+                    onChange={(e) => setShippingFullName(e.target.value)}
+                    placeholder="Recipient name"
+                  />
+                  <Input
+                    label="Address Line 1"
+                    value={shippingAddressLine1}
+                    onChange={(e) => setShippingAddressLine1(e.target.value)}
+                    placeholder="Street address"
+                  />
+                  <div className="grid grid-cols-3 gap-2">
+                    <Input
+                      label="City"
+                      value={shippingCity}
+                      onChange={(e) => setShippingCity(e.target.value)}
+                      placeholder="City"
+                    />
+                    <Input
+                      label="State"
+                      value={shippingState}
+                      onChange={(e) => setShippingState(e.target.value)}
+                      placeholder="State"
+                    />
+                    <Input
+                      label="Postal Code"
+                      value={shippingPostalCode}
+                      onChange={(e) => setShippingPostalCode(e.target.value)}
+                      placeholder="400001"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-2">
+                <Button variant="outline" onClick={() => setSelectedItem(null)}>
+                  Cancel
+                </Button>
+                <Button
+                  isLoading={purchaseMutation.isPending}
+                  onClick={() => purchaseMutation.mutate(selectedItem)}
+                >
+                  <Zap className="h-4 w-4" />
+                  Reserve &amp; Pay
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
-      </Modal>
+          )}
+        </Modal>
+      )}
     </div>
   );
 }

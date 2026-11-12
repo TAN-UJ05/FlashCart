@@ -75,11 +75,16 @@ export default function AdminOrdersPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
-          <p className="text-sm text-gray-500">Manage customer orders and fulfillment states</p>
+          <span className="text-xs font-semibold uppercase tracking-wider text-primary-600">
+            Fulfillment
+          </span>
+          <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-slate-900">
+            Orders
+          </h1>
+          <p className="text-sm text-slate-500">Manage customer orders and fulfillment states</p>
         </div>
 
         <select
@@ -88,7 +93,7 @@ export default function AdminOrdersPage() {
             setStatusFilter(e.target.value as OrderStatus | '');
             setPage(0);
           }}
-          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+          className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-700 transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
         >
           <option value="">All Statuses</option>
           {ALL_STATUSES.map((st) => (
@@ -105,43 +110,45 @@ export default function AdminOrdersPage() {
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+              <thead className="border-b border-slate-200 bg-slate-50/80 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 <tr>
-                  <th className="px-4 py-3">Order #</th>
-                  <th className="px-4 py-3">Customer</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3 text-right">Items</th>
-                  <th className="px-4 py-3 text-right">Total</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Update Status</th>
+                  <th className="px-4 py-3.5">Order #</th>
+                  <th className="px-4 py-3.5">Customer</th>
+                  <th className="px-4 py-3.5">Date</th>
+                  <th className="px-4 py-3.5 text-right">Items</th>
+                  <th className="px-4 py-3.5 text-right">Total</th>
+                  <th className="px-4 py-3.5">Status</th>
+                  <th className="px-4 py-3.5">Update Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-slate-100">
                 {ordersQuery.isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => <TableRowSkeleton key={i} cols={7} />)
                 ) : (ordersQuery.data?.content ?? []).length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
                       No orders found.
                     </td>
                   </tr>
                 ) : (
                   (ordersQuery.data?.content ?? []).map((order) => (
-                    <tr key={order.id}>
+                    <tr key={order.id} className="transition-colors hover:bg-slate-50/80">
                       <td className="px-4 py-3">
                         <Link
                           to={`/orders/${order.id}`}
-                          className="font-semibold text-primary-600 hover:text-primary-700"
+                          className="font-semibold text-primary-600 transition-colors hover:text-primary-700"
                         >
                           {order.orderNumber}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-gray-700">
+                      <td className="px-4 py-3 text-slate-700">
                         {order.customerEmail || order.shippingFullName || '-'}
                       </td>
-                      <td className="px-4 py-3 text-gray-500">{formatDateTime(order.createdAt)}</td>
-                      <td className="px-4 py-3 text-right">{order.items.length}</td>
-                      <td className="px-4 py-3 text-right font-semibold">
+                      <td className="px-4 py-3 text-slate-500">{formatDateTime(order.createdAt)}</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                        {order.items.length}
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold tabular-nums text-slate-900">
                         {formatCurrency(order.totalAmount)}
                       </td>
                       <td className="px-4 py-3">
@@ -162,7 +169,7 @@ export default function AdminOrdersPage() {
                                   status: nextStatus,
                                 });
                               }}
-                              className="rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs disabled:bg-gray-100 disabled:text-gray-500"
+                              className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-700 disabled:bg-slate-100 disabled:text-slate-500"
                             >
                               {ALL_STATUSES.map((st) => (
                                 <option

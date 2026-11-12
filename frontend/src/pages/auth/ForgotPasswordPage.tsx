@@ -39,11 +39,11 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="mx-auto flex min-h-[70vh] max-w-md items-center px-4 py-12">
-      <Card className="w-full">
+    <div className="mx-auto flex min-h-[70vh] max-w-md items-center px-4 py-12 animate-fade-in-up">
+      <Card className="w-full shadow-soft">
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Reset your password</CardTitle>
-          <p className="mt-1 text-sm text-gray-500">
+          <CardTitle className="font-display text-xl">Reset your password</CardTitle>
+          <p className="mt-1 text-sm text-slate-500">
             Enter your email and we&apos;ll send you a reset link
           </p>
         </CardHeader>
@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                 <CheckCircle2 className="h-6 w-6" />
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate-600">
                 If an account exists with that email address, a password reset link has been sent.
               </p>
               <Link to="/login" className="block">
@@ -65,7 +65,7 @@ export default function ForgotPasswordPage() {
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {serverError && (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700">
+                <div className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700">
                   {serverError}
                 </div>
               )}
@@ -80,7 +80,7 @@ export default function ForgotPasswordPage() {
               <Button type="submit" className="w-full" isLoading={isSubmitting}>
                 Send Reset Link
               </Button>
-              <p className="text-center text-sm text-gray-600">
+              <p className="text-center text-sm text-slate-600">
                 <Link to="/login" className="font-medium text-primary-600 hover:text-primary-700">
                   Back to Sign In
                 </Link>

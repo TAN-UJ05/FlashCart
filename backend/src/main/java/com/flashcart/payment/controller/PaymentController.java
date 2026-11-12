@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +25,7 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping("/initiate")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<PaymentDto>> initiatePayment(
             @AuthenticationPrincipal User user,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
@@ -33,6 +35,7 @@ public class PaymentController {
     }
 
     @PostMapping("/callback")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<PaymentDto>> handleCallback(
             @AuthenticationPrincipal User user,
             @Valid @RequestBody PaymentCallbackRequest request) {

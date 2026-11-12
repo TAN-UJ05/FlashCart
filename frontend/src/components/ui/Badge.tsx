@@ -11,13 +11,13 @@ export type BadgeVariant =
   | 'primary';
 
 const variantStyles: Record<BadgeVariant, string> = {
-  default: 'bg-gray-100 text-gray-700 border-gray-200',
-  success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  warning: 'bg-amber-50 text-amber-700 border-amber-200',
-  danger: 'bg-red-50 text-red-700 border-red-200',
-  info: 'bg-blue-50 text-blue-700 border-blue-200',
-  purple: 'bg-purple-50 text-purple-700 border-purple-200',
-  primary: 'bg-primary-50 text-primary-700 border-primary-200',
+  default: 'bg-slate-100 text-slate-700 border-slate-200/80',
+  success: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+  warning: 'bg-amber-50 text-amber-800 border-amber-200/80',
+  danger: 'bg-rose-50 text-rose-700 border-rose-200/80',
+  info: 'bg-sky-50 text-sky-700 border-sky-200/80',
+  purple: 'bg-violet-50 text-violet-700 border-violet-200/80',
+  primary: 'bg-primary-50 text-primary-700 border-primary-200/80',
 };
 
 export interface BadgeProps {
@@ -30,7 +30,7 @@ export function Badge({ variant = 'default', className, children }: BadgeProps) 
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium',
+        'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-tight',
         variantStyles[variant],
         className
       )}

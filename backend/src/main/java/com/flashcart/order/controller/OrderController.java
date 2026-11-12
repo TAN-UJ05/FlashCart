@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping("/checkout")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<OrderDto>> checkout(
             @AuthenticationPrincipal User user,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
@@ -34,6 +36,7 @@ public class OrderController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<PageResponse<OrderDto>>> getMyOrders(
             @AuthenticationPrincipal User user,
             @RequestParam(defaultValue = "0") int page,

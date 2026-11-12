@@ -36,7 +36,7 @@ type ShippingFormValues = z.infer<typeof shippingSchema>;
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const { cart, isLoading: cartLoading } = useCart();
 
@@ -50,7 +50,7 @@ export default function CheckoutPage() {
       const res = await userService.getAddresses();
       return res.data;
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !isAdmin,
   });
 
   const addresses = addressesQuery.data ?? [];
@@ -102,7 +102,7 @@ export default function CheckoutPage() {
       queryClient.invalidateQueries({ queryKey: ['product'] });
       queryClient.invalidateQueries({ queryKey: ['flash-sales'] });
       toast({
-        title: 'Order placed!',
+        title: 'Order created',
         description: `Order ${order.orderNumber} reserved inventory. Complete payment now.`,
         variant: 'success',
       });
@@ -120,7 +120,7 @@ export default function CheckoutPage() {
   if (cartLoading || addressesQuery.isLoading) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <Skeleton className="h-96 w-full rounded-xl" />
+        <Skeleton className="h-96 w-full rounded-2xl" />
       </div>
     );
   }
@@ -129,11 +129,11 @@ export default function CheckoutPage() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
         <EmptyState
-          title="Your cart is empty"
-          description="Add products to your cart before checking out."
+          title="Your shopping bag is empty"
+          description="Add products to your bag before checking out."
           action={
             <Link to="/products">
-              <Button>Browse Products</Button>
+              <Button>Browse Catalog</Button>
             </Link>
           }
         />
@@ -142,8 +142,8 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <h1 className="mb-8 text-3xl font-bold text-gray-900">Checkout</h1>
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 animate-fade-in">
+      <h1 className="mb-8 font-display text-3xl font-bold text-slate-900">Checkout</h1>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
@@ -166,22 +166,22 @@ export default function CheckoutPage() {
                           setSelectedAddressId(addr.id);
                           setAddressMode('saved');
                         }}
-                        className={`rounded-xl border p-4 text-left transition-all ${
+                        className={`rounded-2xl border p-4 text-left transition-all ${
                           !useNewAddress && effectiveAddressId === addr.id
                             ? 'border-primary-600 bg-primary-50/50 ring-2 ring-primary-500/20'
-                            : 'border-gray-200 hover:border-gray-300'
+                            : 'border-slate-200 hover:border-slate-300'
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-semibold text-gray-900">{addr.fullName}</span>
+                          <span className="font-semibold text-slate-900">{addr.fullName}</span>
                           {addr.isDefault && (
-                            <span className="rounded bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-700">
+                            <span className="rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-semibold text-primary-700">
                               Default
                             </span>
                           )}
                         </div>
-                        <p className="mt-1 text-sm text-gray-600">{addr.addressLine1}</p>
-                        <p className="text-sm text-gray-600">
+                        <p className="mt-1 text-sm text-slate-600">{addr.addressLine1}</p>
+                        <p className="text-sm text-slate-600">
                           {addr.city}, {addr.state} {addr.postalCode}
                         </p>
                       </button>
@@ -191,7 +191,7 @@ export default function CheckoutPage() {
                   <button
                     type="button"
                     onClick={() => setAddressMode(useNewAddress ? 'saved' : 'new')}
-                    className="text-sm font-medium text-primary-600 hover:text-primary-700"
+                    className="text-sm font-semibold text-primary-600 hover:text-primary-700"
                   >
                     {useNewAddress ? '← Use a saved address' : '+ Ship to a different address'}
                   </button>
@@ -270,7 +270,7 @@ export default function CheckoutPage() {
                     data-testid="place-order-button"
                   >
                     <ShieldCheck className="h-5 w-5" />
-                    Place Order &amp; Reserve Stock
+                    Place Order &amp; Continue to Payment
                   </Button>
                 </form>
               ) : (
@@ -295,13 +295,13 @@ export default function CheckoutPage() {
             <CardHeader>
               <CardTitle className="text-sm">Items in Order</CardTitle>
             </CardHeader>
-            <CardContent className="divide-y divide-gray-100">
+            <CardContent className="divide-y divide-slate-100">
               {cart.items.map((item) => (
                 <div key={item.id} className="flex justify-between py-2.5 text-sm">
-                  <span className="text-gray-700">
+                  <span className="text-slate-700">
                     {item.productName} × {item.quantity}
                   </span>
-                  <span className="font-medium text-gray-900">
+                  <span className="font-semibold tabular-nums text-slate-900">
                     ₹{item.lineTotal.toFixed(2)}
                   </span>
                 </div>
