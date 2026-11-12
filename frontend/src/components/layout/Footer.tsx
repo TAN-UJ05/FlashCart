@@ -61,15 +61,13 @@ export function Footer() {
             <ul className="mt-4 space-y-2.5 text-sm text-slate-500">
               <li>Same-day dispatch on confirmed orders</li>
               <li>Real-time stock availability</li>
-              <li>15-minute checkout price hold</li>
-              <li>7-day easy cancellation &amp; support</li>
             </ul>
           </div>
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-slate-100 pt-6 text-xs text-slate-400 sm:flex-row">
           <span>FlashCart Storefront</span>
-          <span>INR (₹) · Express shipping across India</span>
+          <span>Express shipping across India</span>
         </div>
       </div>
     </footer>

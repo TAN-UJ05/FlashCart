@@ -142,7 +142,7 @@ export default function AdminLayout() {
           <div className="flex items-center gap-3 text-sm">
             <div className="hidden sm:flex items-center gap-2 rounded-full border border-slate-200/80 bg-slate-50 px-3 py-1.5 text-xs text-slate-600">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span className="font-medium text-slate-800">{user?.email}</span>
+              <span className="font-medium text-slate-800">{user?.firstName || 'Admin'}</span>
             </div>
           </div>
         </header>

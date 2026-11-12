@@ -150,7 +150,7 @@ export default function HomePage() {
               </div>
               <Link to="/flash-sales" className="shrink-0">
                 <Button size="lg" className="bg-white text-primary-700 hover:bg-slate-100 shadow-lg">
-                  Shop Flash Drops
+                  Explore Flash Drops
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
